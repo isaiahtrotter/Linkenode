@@ -1,0 +1,59 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.navLinks {
+  display: flex;
+  gap: 20px;
+}
+
+.navLinks a {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+}
+
+.navLinks a:hover {
+  color: #000;
+}
+
+.signOutBtn {
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.signOutBtn:hover {
+  background: #f5f5f5;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 24px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.error {
+  color: #a33;
+  background: #fdf0f0;
+  border: 1px solid #f2c9c9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fetchWidgetData } from "@/lib/fetchWidgetData";
 
 const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
-  <div class="launcher" id="launcher-btn" role="button" aria-label="People I've worked with">
+  <div class="launcher" id="launcher-btn" role="button" aria-label="View My Network">
     <svg width="22" height="22" viewBox="0 0 64 64" style="flex-shrink:0;">
       <line x1="32" y1="32" x2="14" y2="18" stroke="rgba(0,0,0,0.25)" stroke-width="2.5"/>
       <line x1="32" y1="32" x2="50" y2="16" stroke="rgba(0,0,0,0.25)" stroke-width="2.5"/>
@@ -15,11 +16,12 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
       <circle class="launcher-dot" cx="48" cy="48" r="6" fill="#C2477F"/>
       <circle cx="32" cy="32" r="9" fill="#1D69E0"/>
     </svg>
-    <span class="launcher-label">People I've worked with</span>
+    <span class="launcher-label">View My Network</span>
   </div>
 
   <div class="panel-expanded">
     <div id="ring-app" style="position:relative;width:100%;height:100%;overflow:hidden;">
+      <div id="dot-highlight-layer" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></div>
       <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
       <button id="resize-handle" aria-label="Resize" style="position:absolute;top:14px;left:14px;width:30px;height:30px;padding:0;border-radius:99px;border:none;display:flex;align-items:center;justify-content:center;cursor:nwse-resize;z-index:3;touch-action:none;"><span id="resize-icon"></span></button>
       <div style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;z-index:2;">
@@ -27,12 +29,12 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
         <button id="widget-close-btn" class="proto-btn" type="button" aria-label="Close" style="width:30px;height:30px;padding:0;border-radius:99px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span id="widget-close-icon"></span></button>
       </div>
       <svg id="graph-svg" width="100%" height="100%" style="display:block;position:relative;z-index:1;"></svg>
-            <div id="canvas-links">
-        <a href="#" class="page-link">
+      <div id="canvas-links">
+        <a href="#" id="add-owner-btn" class="page-link proto-btn" style="padding:8px 12px;border-radius:99px;border-bottom:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
-          <span>Add Isaiah Trotter</span>
+          <span id="add-owner-label">Add me</span>
         </a>
-        <a href="#" class="page-link">
+        <a href="#" id="share-network-btn" class="page-link proto-btn" style="padding:8px 12px;border-radius:99px;border-bottom:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="18" r="2.3"/><line x1="7.7" y1="7.3" x2="10.5" y2="16.2"/><line x1="16.3" y1="7.3" x2="13.5" y2="16.2"/><line x1="8.3" y1="6" x2="15.7" y2="6"/></svg>
           <span>Create your network</span>
         </a>
@@ -49,24 +51,44 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
 declare global {
   interface Window {
     d3?: unknown;
+    __initNetworkWidget?: (data: unknown) => void;
   }
 }
 
-export default function NetworkWidget() {
+export default function NetworkWidget({ embedKey }: { embedKey: string }) {
   const initialized = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
-    import("d3").then((d3) => {
-      window.d3 = d3;
-      const script = document.createElement("script");
-      script.src = "/network-widget/widget.js";
-      script.async = true;
-      document.body.appendChild(script);
-    });
-  }, []);
+    let cancelled = false;
+
+    Promise.all([fetchWidgetData(embedKey), import("d3")])
+      .then(([widgetData, d3]) => {
+        if (cancelled) return;
+        window.d3 = d3;
+        const script = document.createElement("script");
+        script.src = "/network-widget/widget.js";
+        script.async = true;
+        script.onload = () => {
+          if (!cancelled) window.__initNetworkWidget?.(widgetData);
+        };
+        document.body.appendChild(script);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [embedKey]);
+
+  if (error) {
+    return <p style={{ color: "#a33", fontSize: 13 }}>Couldn&apos;t load network preview: {error}</p>;
+  }
 
   return <div dangerouslySetInnerHTML={{ __html: WIDGET_MARKUP }} />;
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "./network-widget.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Isaiah Trotter",
-  description: "Portfolio dashboard",
+  title: "Worked Together",
+  description: "Manage your network and embed it on your site",
 };
 
 export default function RootLayout({
@@ -32,6 +31,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        <link rel="stylesheet" href="/network-widget/widget.css" />
       </head>
       <body>{children}</body>
     </html>

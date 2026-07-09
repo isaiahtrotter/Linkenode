@@ -1,12 +1,23 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import SignInButton from "@/components/SignInButton";
 import styles from "./page.module.css";
-import NetworkWidget from "@/components/NetworkWidget";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className={styles.page}>
-      <h1>Isaiah Trotter</h1>
-      <p>Portfolio dashboard — placeholder content, network widget lives in the corner.</p>
-      <NetworkWidget />
+      <h1>Worked Together</h1>
+      <p>Sign in to manage your network and get your embed code.</p>
+      <SignInButton />
     </div>
   );
 }
