@@ -23,6 +23,31 @@
           shadowOn ? "0 20px 60px rgba(0,0,0,0.25)" : "none",
         );
 
+        if (mode === "floating") {
+          var corner = options.corner || settings.corner || "bottom-right";
+          ["bottom-right", "bottom-left", "top-right", "top-left"].forEach(function (c) {
+            widgetRoot.classList.remove("corner-" + c);
+          });
+          widgetRoot.classList.add("corner-" + corner);
+
+          var hideLauncher =
+            options.hideLauncher != null ? options.hideLauncher : !!settings.hideLauncher;
+          if (hideLauncher) {
+            widgetRoot.classList.add("hide-launcher");
+          }
+        }
+
+        var launcherLabelText = options.label || settings.label;
+        if (launcherLabelText) {
+          var launcherLabelEl = launcherBtn.querySelector(".launcher-label");
+          if (launcherLabelEl) launcherLabelEl.textContent = launcherLabelText;
+        }
+
+        var showIcon =
+          options.icon != null ? options.icon : settings.icon != null ? settings.icon : true;
+        var launcherIconEl = launcherBtn.querySelector("svg");
+        if (launcherIconEl) launcherIconEl.style.display = showIcon ? "" : "none";
+
         var width = container.clientWidth || 460,
           height = container.clientHeight || 560;
 

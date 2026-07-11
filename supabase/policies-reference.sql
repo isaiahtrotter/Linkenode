@@ -47,6 +47,14 @@ create policy "recipients can respond to connection requests"
     recipient_id in (select id from public.profiles where user_id = auth.uid())
   );
 
+-- Lets a requester cancel (delete) their own still-pending outgoing request.
+create policy "requesters can cancel own connection requests"
+  on public.connection_requests for delete
+  to authenticated
+  using (
+    requester_id in (select id from public.profiles where user_id = auth.uid())
+  );
+
 -- 4. connection_notes: a user's private notes about their own connections.
 --    The dashboard upserts on (connection_request_id, profile_id) — add a
 --    unique constraint on that pair if one doesn't already exist:

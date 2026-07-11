@@ -188,9 +188,9 @@
 
 .sampleGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .sampleThumb {
@@ -202,11 +202,40 @@
   background-position: center;
   background-color: #e4e3df;
   cursor: grab;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, outline-color 0.1s ease;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .sampleThumb:active {
   cursor: grabbing;
+}
+
+.sampleThumbDragOver {
+  outline-color: #1c1c1a;
+}
+
+.sampleSlotEmpty {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.25);
+  background-color: #e4e3df;
+  color: #8a887f;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+
+.sampleSlotEmpty:hover {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.sampleSlotDragOver {
+  border-color: #1c1c1a;
+  background-color: #d9d8d3;
 }
 
 .removeThumbBtn {
@@ -320,6 +349,29 @@
   color: #f1efe8;
 }
 
+.corners {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.cornerOption {
+  padding: 7px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  color: #1c1c1a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cornerOptionActive {
+  background: #1c1c1a;
+  color: #f1efe8;
+  border-color: #1c1c1a;
+}
+
 .snippet {
   background: #1c1c1a;
   color: #f1efe8;
@@ -339,8 +391,9 @@
   background: #efeeec;
   border: 1px solid rgba(0, 0, 0, 0.09);
   border-radius: 18px;
-  overflow: hidden;
   height: 420px;
+  padding: 28px;
+  box-sizing: border-box;
 }
 
 .controlsCard {
@@ -379,6 +432,7 @@
   border-radius: 99px;
   border: 1px solid rgba(0, 0, 0, 0.14);
   background: #fff;
+  color: #1c1c1a;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;

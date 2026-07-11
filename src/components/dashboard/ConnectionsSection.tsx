@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   searchProfilesByName,
   sendConnectionRequest,
+  cancelConnectionRequest,
   respondToRequest,
   saveConnectionNote,
   type SearchResult,
@@ -150,7 +151,14 @@ export default function ConnectionsSection({
             {outgoing.map(({ request, other }) => (
               <li key={request.id} className={styles.row}>
                 <span>{other?.name ?? "Unknown"}</span>
-                <span className={styles.badge}>Pending</span>
+                <div className={styles.rowActions}>
+                  <span className={styles.badge}>Pending</span>
+                  <form action={cancelConnectionRequest.bind(null, request.id)}>
+                    <button type="submit" className={styles.smallLinkBtn}>
+                      Cancel
+                    </button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>

@@ -91,6 +91,12 @@ body { margin:0; font-family: -apple-system, sans-serif; }
         pointer-events: none;
       }
 
+      /* Used when the site owner supplies their own trigger element instead
+         of the built-in launcher pill. */
+      #widget-root.hide-launcher .launcher {
+        display: none !important;
+      }
+
       #widget-root.corner-bottom-right .launcher,
       #widget-root.corner-bottom-right .panel-expanded {
         bottom: 0;

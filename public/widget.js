@@ -2,6 +2,10 @@
   var thisScript = document.currentScript;
   var embedKey = thisScript.getAttribute("data-embed-key");
   var mode = thisScript.getAttribute("data-mode") === "inline" ? "inline" : "floating";
+  var corner = thisScript.getAttribute("data-corner") || "bottom-right";
+  var label = thisScript.getAttribute("data-label") || null;
+  var showIcon = thisScript.getAttribute("data-icon") !== "false";
+  var hideLauncher = thisScript.getAttribute("data-hide-launcher") === "true";
   var origin = new URL(thisScript.src, window.location.href).origin;
 
   if (!embedKey) {
@@ -171,7 +175,13 @@
       loadScript(origin + "/network-widget/widget.js"),
     ])
       .then(function (results) {
-        window.__initNetworkWidget(results[0], { mode: mode });
+        window.__initNetworkWidget(results[0], {
+          mode: mode,
+          corner: corner,
+          label: label,
+          icon: showIcon,
+          hideLauncher: hideLauncher,
+        });
       })
       .catch(function (err) {
         console.error("[worked-together widget] failed to load:", err);

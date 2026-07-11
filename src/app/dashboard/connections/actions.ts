@@ -74,6 +74,21 @@ export async function sendConnectionRequest(recipientId: string) {
   revalidatePath("/dashboard");
 }
 
+export async function cancelConnectionRequest(requestId: string) {
+  const me = await getOwnProfile();
+  if (!me) throw new Error("Profile not found.");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("connection_requests")
+    .delete()
+    .eq("id", requestId)
+    .eq("requester_id", me.id);
+  if (error) throw error;
+
+  revalidatePath("/dashboard");
+}
+
 export async function respondToRequest(requestId: string, accept: boolean) {
   const supabase = await createClient();
   const { error } = await supabase
