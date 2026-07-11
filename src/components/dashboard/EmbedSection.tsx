@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./widget-ui.module.css";
 
-type EmbedType = "floating" | "inline" | "trigger";
+type EmbedType = "floating" | "inline";
 type Corner = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 const CORNERS: { value: Corner; label: string }[] = [
@@ -29,22 +29,22 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
   const [label, setLabel] = useState(DEFAULT_LABEL);
   const [showIcon, setShowIcon] = useState(true);
   const [copied, setCopied] = useState(false);
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  // Starts empty on both server and first client render (matching SSR
+  // output) and fills in after mount, so the URL doesn't cause a
+  // hydration mismatch.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
 
   const attrs = [`data-embed-key="${embedKey}"`];
   if (embedType === "inline") {
     attrs.push('data-mode="inline"');
   } else {
     if (corner !== "bottom-right") attrs.push(`data-corner="${corner}"`);
-    if (embedType === "trigger") {
-      attrs.push('data-hide-launcher="true"');
-    } else {
-      const trimmedLabel = label.trim();
-      if (trimmedLabel && trimmedLabel !== DEFAULT_LABEL) {
-        attrs.push(`data-label="${escapeAttr(trimmedLabel)}"`);
-      }
-      if (!showIcon) attrs.push('data-icon="false"');
+    const trimmedLabel = label.trim();
+    if (trimmedLabel && trimmedLabel !== DEFAULT_LABEL) {
+      attrs.push(`data-label="${escapeAttr(trimmedLabel)}"`);
     }
+    if (!showIcon) attrs.push('data-icon="false"');
   }
 
   const scriptTag = `<script src="${origin}/widget.js" ${attrs.join(" ")} async></script>`;
@@ -52,9 +52,7 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
   const snippet =
     embedType === "inline"
       ? `<div style="width: 480px; height: 600px;">\n  ${scriptTag}\n</div>`
-      : embedType === "trigger"
-        ? `${scriptTag}\n\n<button data-network-widget-open>View my network</button>`
-        : scriptTag;
+      : scriptTag;
 
   function copy() {
     navigator.clipboard.writeText(snippet);
@@ -81,51 +79,30 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
         >
           Inline
         </button>
-        <button
-          type="button"
-          onClick={() => setEmbedType("trigger")}
-          className={`${styles.modeOption} ${embedType === "trigger" ? styles.modeOptionActive : ""}`}
-        >
-          My own button
-        </button>
       </div>
 
-      {embedType === "inline" && (
-        <p className={styles.hint} style={{ marginBottom: 12 }}>
+      {embedType === "inline" ? (
+        <p className={styles.hint} style={{ marginBottom: 10 }}>
           Sits directly in your page, always open, and fills whatever element
-          you put the script tag in — size and style that element however you
-          like.
+          you put the script tag in.
         </p>
-      )}
-
-      {embedType === "trigger" && (
-        <p className={styles.hint} style={{ marginBottom: 12 }}>
-          No default button is shown. Put the <code>data-network-widget-open</code>{" "}
-          attribute on any link or button anywhere on your site — styled
-          however you like — and clicking it opens the widget.
-        </p>
-      )}
-
-      {(embedType === "floating" || embedType === "trigger") && (
-        <div className={styles.fieldRow}>
-          <span className={styles.label}>Corner</span>
-          <div className={styles.corners}>
-            {CORNERS.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setCorner(c.value)}
-                className={`${styles.cornerOption} ${corner === c.value ? styles.cornerOptionActive : ""}`}
-              >
-                {c.label}
-              </button>
-            ))}
+      ) : (
+        <div className={styles.fieldRowGroup}>
+          <div className={styles.fieldRow} style={{ flex: "0 0 120px" }}>
+            <span className={styles.label}>Corner</span>
+            <select
+              value={corner}
+              onChange={(e) => setCorner(e.target.value as Corner)}
+              className={styles.input}
+            >
+              {CORNERS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
 
-      {embedType === "floating" && (
-        <>
           <div className={styles.fieldRow}>
             <span className={styles.label}>Button text</span>
             <input
@@ -135,20 +112,19 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
               className={styles.input}
             />
           </div>
-          <div className={styles.controlRow} style={{ marginBottom: 12 }}>
-            <div className={styles.controlLabelRow}>
-              <span>Show icon</span>
-              <button
-                type="button"
-                className={`${styles.switch} ${showIcon ? styles.switchOn : ""}`}
-                onClick={() => setShowIcon((v) => !v)}
-                aria-label="Toggle icon"
-              >
-                <span className={styles.switchKnob} />
-              </button>
-            </div>
+
+          <div className={styles.fieldRow} style={{ flex: "0 0 auto", alignItems: "center" }}>
+            <span className={styles.label}>Icon</span>
+            <button
+              type="button"
+              className={`${styles.switch} ${showIcon ? styles.switchOn : ""}`}
+              onClick={() => setShowIcon((v) => !v)}
+              aria-label="Toggle icon"
+            >
+              <span className={styles.switchKnob} />
+            </button>
           </div>
-        </>
+        </div>
       )}
 
       <pre className={styles.snippet}>{snippet}</pre>

@@ -6,6 +6,8 @@ import { updateWidgetSettings } from "@/app/dashboard/actions";
 import type { WidgetSettings } from "@/lib/dal";
 import styles from "./widget-ui.module.css";
 
+const MAX_CORNER_RADIUS = 30;
+
 const DEFAULT_SETTINGS: WidgetSettings = {
   theme: "light",
   cornerRadius: 24,
@@ -23,7 +25,9 @@ export default function PreviewPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const currentThemeRef = useRef(settings.theme);
 
-  const [cornerRadius, setCornerRadius] = useState(settings.cornerRadius);
+  const [cornerRadius, setCornerRadius] = useState(
+    Math.min(settings.cornerRadius, MAX_CORNER_RADIUS),
+  );
   const [theme, setTheme] = useState(settings.theme);
   const [shadow, setShadow] = useState(settings.shadow);
   const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
@@ -77,25 +81,21 @@ export default function PreviewPanel({
       <div className={`${styles.card} ${styles.controlsCard}`}>
         <p className={styles.cardLabel}>Appearance</p>
 
-        <div className={styles.controlRow}>
-          <div className={styles.controlLabelRow}>
-            <span>Corner radius</span>
-            <span>{cornerRadius}px</span>
-          </div>
+        <div className={styles.controlRowInline}>
+          <span className={styles.controlInlineLabel}>Radius</span>
           <input
             type="range"
             min={0}
-            max={40}
+            max={MAX_CORNER_RADIUS}
             value={cornerRadius}
             onChange={(e) => handleRadiusChange(Number(e.target.value))}
             className={styles.slider}
           />
+          <span className={styles.controlInlineValue}>{cornerRadius}px</span>
         </div>
 
-        <div className={styles.controlRow}>
-          <div className={styles.controlLabelRow}>
-            <span>Default theme</span>
-          </div>
+        <div className={styles.controlRowInline}>
+          <span className={styles.controlInlineLabel}>Theme</span>
           <div className={styles.themeToggleRow}>
             <button
               type="button"
@@ -112,20 +112,17 @@ export default function PreviewPanel({
               Dark
             </button>
           </div>
-        </div>
-
-        <div className={styles.controlRow}>
-          <div className={styles.controlLabelRow}>
-            <span>Box shadow</span>
-            <button
-              type="button"
-              className={`${styles.switch} ${shadow ? styles.switchOn : ""}`}
-              onClick={() => handleShadowChange(!shadow)}
-              aria-label="Toggle box shadow"
-            >
-              <span className={styles.switchKnob} />
-            </button>
-          </div>
+          <span className={styles.controlInlineLabel} style={{ marginLeft: 6 }}>
+            Shadow
+          </span>
+          <button
+            type="button"
+            className={`${styles.switch} ${shadow ? styles.switchOn : ""}`}
+            onClick={() => handleShadowChange(!shadow)}
+            aria-label="Toggle box shadow"
+          >
+            <span className={styles.switchKnob} />
+          </button>
         </div>
 
         <button type="button" onClick={handleSave} className={styles.btnPrimary}>
