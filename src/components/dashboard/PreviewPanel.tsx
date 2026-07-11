@@ -26,7 +26,7 @@ export default function PreviewPanel({
   const [cornerRadius, setCornerRadius] = useState(settings.cornerRadius);
   const [theme, setTheme] = useState(settings.theme);
   const [shadow, setShadow] = useState(settings.shadow);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
   function getWidgetRoot(): HTMLElement | null {
@@ -57,17 +57,15 @@ export default function PreviewPanel({
     }
   }
 
-  async function handleSave() {
-    setSaveState("saving");
+  function handleSave() {
+    setSaveState("saved");
     setSaveError(null);
-    try {
-      await updateWidgetSettings({ theme, cornerRadius, shadow });
-      setSaveState("saved");
-      setTimeout(() => setSaveState("idle"), 1500);
-    } catch (err) {
+    setTimeout(() => setSaveState((s) => (s === "saved" ? "idle" : s)), 1500);
+
+    updateWidgetSettings({ theme, cornerRadius, shadow }).catch((err) => {
       setSaveState("error");
       setSaveError(err instanceof Error ? err.message : "Couldn't save appearance.");
-    }
+    });
   }
 
   return (
@@ -131,13 +129,11 @@ export default function PreviewPanel({
         </div>
 
         <button type="button" onClick={handleSave} className={styles.btnPrimary}>
-          {saveState === "saving"
-            ? "Saving…"
-            : saveState === "saved"
-              ? "Saved!"
-              : saveState === "error"
-                ? "Try again"
-                : "Save appearance"}
+          {saveState === "saved"
+            ? "Saved!"
+            : saveState === "error"
+              ? "Try again"
+              : "Save appearance"}
         </button>
         {saveError && <p className={styles.error}>{saveError}</p>}
         <p className={styles.hint}>

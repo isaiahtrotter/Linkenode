@@ -84,6 +84,7 @@
         };
 
         var currentTheme = "light";
+        var currentPanelId = null;
 
         // ---- Data comes from Supabase now, not hardcoded ----
         // widgetData is passed in by widget-loader.js after it fetches
@@ -1251,6 +1252,7 @@
         }
 
         function openPanel(id) {
+          currentPanelId = id;
           var person = db[id];
           var t = THEMES[currentTheme];
           var roleLabel = person.role === "owner" ? "Portfolio owner" : "";
@@ -1434,12 +1436,35 @@
         }
 
         function closePanel() {
+          currentPanelId = null;
           panel.style.transform = "translateX(100%)";
           panel.style.boxShadow = "none";
           backdrop.classList.remove("show");
         }
 
         backdrop.addEventListener("click", closePanel);
+
+        // Lets the dashboard's own live preview push profile edits (name,
+        // bio, website, work samples) straight into the already-rendered
+        // widget instead of waiting on a save + full re-fetch/re-init.
+        window.__updateNetworkWidgetOwner = function (patch) {
+          if (!db.you) return;
+          Object.assign(db.you, patch);
+
+          var ownerNode = nodes.filter(function (n) {
+            return n.id === "you";
+          })[0];
+          if (ownerNode) Object.assign(ownerNode, patch);
+
+          if (patch.name !== undefined) {
+            var addOwnerLabel = document.getElementById("add-owner-label");
+            if (addOwnerLabel) addOwnerLabel.textContent = "Add " + db.you.name;
+          }
+
+          if (currentPanelId === "you") {
+            openPanel("you");
+          }
+        };
 
         document
           .getElementById("theme-toggle-btn")

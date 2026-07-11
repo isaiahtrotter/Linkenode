@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   searchProfilesByName,
   sendConnectionRequest,
@@ -12,6 +13,8 @@ import {
 import styles from "./widget-ui.module.css";
 
 type OtherProfile = { id: string; name: string; avatar_url: string | null } | undefined;
+type RequestRow = { request: { id: string }; other: OtherProfile };
+type AcceptedRow = { request: { id: string }; other: OtherProfile; note: string };
 
 const SEARCH_DEBOUNCE_MS = 200;
 
@@ -20,10 +23,15 @@ export default function ConnectionsSection({
   outgoing,
   accepted,
 }: {
-  incoming: { request: { id: string }; other: OtherProfile }[];
-  outgoing: { request: { id: string }; other: OtherProfile }[];
-  accepted: { request: { id: string }; other: OtherProfile; note: string }[];
+  incoming: RequestRow[];
+  outgoing: RequestRow[];
+  accepted: AcceptedRow[];
 }) {
+  const router = useRouter();
+  const [incomingState, setIncomingState] = useState(incoming);
+  const [outgoingState, setOutgoingState] = useState(outgoing);
+  const [acceptedState, setAcceptedState] = useState(accepted);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -31,6 +39,10 @@ export default function ConnectionsSection({
   const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSeq = useRef(0);
+
+  useEffect(() => setIncomingState(incoming), [incoming]);
+  useEffect(() => setOutgoingState(outgoing), [outgoing]);
+  useEffect(() => setAcceptedState(accepted), [accepted]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -59,10 +71,42 @@ export default function ConnectionsSection({
   }, [query]);
 
   function handleSendRequest(id: string) {
-    sendConnectionRequest(id).then(() => {
+    setResults((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: "pending_outgoing" } : r)),
+    );
+    sendConnectionRequest(id).catch((err) => {
       setResults((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: "pending_outgoing" } : r)),
+        prev.map((r) => (r.id === id ? { ...r, status: "not_connected" } : r)),
       );
+      setActionError(err instanceof Error ? err.message : "Couldn't send request.");
+    });
+  }
+
+  function handleAccept(requestId: string) {
+    const item = incomingState.find((i) => i.request.id === requestId);
+    setIncomingState((prev) => prev.filter((i) => i.request.id !== requestId));
+    if (item) {
+      setAcceptedState((prev) => [...prev, { request: item.request, other: item.other, note: "" }]);
+    }
+    respondToRequest(requestId, true).catch((err) => {
+      setActionError(err instanceof Error ? err.message : "Couldn't accept request.");
+      router.refresh();
+    });
+  }
+
+  function handleDecline(requestId: string) {
+    setIncomingState((prev) => prev.filter((i) => i.request.id !== requestId));
+    respondToRequest(requestId, false).catch((err) => {
+      setActionError(err instanceof Error ? err.message : "Couldn't decline request.");
+      router.refresh();
+    });
+  }
+
+  function handleCancel(requestId: string) {
+    setOutgoingState((prev) => prev.filter((o) => o.request.id !== requestId));
+    cancelConnectionRequest(requestId).catch((err) => {
+      setActionError(err instanceof Error ? err.message : "Couldn't cancel request.");
+      router.refresh();
     });
   }
 
@@ -115,26 +159,32 @@ export default function ConnectionsSection({
         )}
       </div>
 
-      {incoming.length > 0 && (
+      {actionError && <p className={styles.error}>{actionError}</p>}
+
+      {incomingState.length > 0 && (
         <>
           <p className={styles.cardLabel} style={{ marginTop: 20 }}>
             Incoming requests
           </p>
           <ul className={styles.list}>
-            {incoming.map(({ request, other }) => (
+            {incomingState.map(({ request, other }) => (
               <li key={request.id} className={styles.row}>
                 <span>{other?.name ?? "Unknown"}</span>
                 <div className={styles.rowActions}>
-                  <form action={respondToRequest.bind(null, request.id, true)}>
-                    <button type="submit" className={styles.btnSecondary}>
-                      Accept
-                    </button>
-                  </form>
-                  <form action={respondToRequest.bind(null, request.id, false)}>
-                    <button type="submit" className={styles.smallLinkBtn}>
-                      Decline
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    onClick={() => handleAccept(request.id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.smallLinkBtn}
+                    onClick={() => handleDecline(request.id)}
+                  >
+                    Decline
+                  </button>
                 </div>
               </li>
             ))}
@@ -142,22 +192,24 @@ export default function ConnectionsSection({
         </>
       )}
 
-      {outgoing.length > 0 && (
+      {outgoingState.length > 0 && (
         <>
           <p className={styles.cardLabel} style={{ marginTop: 20 }}>
             Outgoing requests
           </p>
           <ul className={styles.list}>
-            {outgoing.map(({ request, other }) => (
+            {outgoingState.map(({ request, other }) => (
               <li key={request.id} className={styles.row}>
                 <span>{other?.name ?? "Unknown"}</span>
                 <div className={styles.rowActions}>
                   <span className={styles.badge}>Pending</span>
-                  <form action={cancelConnectionRequest.bind(null, request.id)}>
-                    <button type="submit" className={styles.smallLinkBtn}>
-                      Cancel
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    className={styles.smallLinkBtn}
+                    onClick={() => handleCancel(request.id)}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </li>
             ))}
@@ -169,7 +221,7 @@ export default function ConnectionsSection({
         Your network
       </p>
       <ul className={styles.list}>
-        {accepted.map(({ request, other, note }) => (
+        {acceptedState.map(({ request, other, note }) => (
           <li key={request.id} className={styles.connectionRow}>
             <span className={styles.connectionName}>{other?.name ?? "Unknown"}</span>
             <form action={saveConnectionNote} className={styles.noteForm}>
@@ -186,7 +238,9 @@ export default function ConnectionsSection({
             </form>
           </li>
         ))}
-        {accepted.length === 0 && <li className={styles.emptyState}>No connections yet.</li>}
+        {acceptedState.length === 0 && (
+          <li className={styles.emptyState}>No connections yet.</li>
+        )}
       </ul>
     </div>
   );

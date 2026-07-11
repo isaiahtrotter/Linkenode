@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { Profile } from "@/lib/dal";
 import { updateProfile } from "@/app/dashboard/profile/actions";
+import { updateOwnerPreview } from "@/lib/widgetLiveUpdate";
 import AvatarUpload from "./AvatarUpload";
 import styles from "./widget-ui.module.css";
 
@@ -28,6 +29,7 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
             id="name"
             name="name"
             defaultValue={profile.name}
+            onChange={(e) => updateOwnerPreview({ name: e.target.value })}
             required
             className={styles.input}
           />
@@ -41,6 +43,7 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
             id="bio"
             name="bio"
             defaultValue={profile.bio ?? ""}
+            onChange={(e) => updateOwnerPreview({ bio: e.target.value })}
             rows={3}
             className={styles.textarea}
           />
@@ -54,6 +57,7 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
             id="website"
             name="website"
             defaultValue={profile.website ?? ""}
+            onChange={(e) => updateOwnerPreview({ website: e.target.value })}
             placeholder="yoursite.com"
             className={styles.input}
           />

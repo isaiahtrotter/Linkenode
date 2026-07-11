@@ -14,7 +14,6 @@ const CORNERS: { value: Corner; label: string }[] = [
 ];
 
 const DEFAULT_LABEL = "View My Network";
-const TRIGGER_SNIPPET = `<a href="#" data-network-widget-open>View my network</a>`;
 
 function escapeAttr(value: string) {
   return value
@@ -30,7 +29,6 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
   const [label, setLabel] = useState(DEFAULT_LABEL);
   const [showIcon, setShowIcon] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [triggerCopied, setTriggerCopied] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const attrs = [`data-embed-key="${embedKey}"`];
@@ -62,12 +60,6 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
     navigator.clipboard.writeText(snippet);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  }
-
-  function copyTrigger() {
-    navigator.clipboard.writeText(TRIGGER_SNIPPET);
-    setTriggerCopied(true);
-    setTimeout(() => setTriggerCopied(false), 1500);
   }
 
   return (
@@ -163,22 +155,6 @@ export default function EmbedSection({ embedKey }: { embedKey: string }) {
       <button onClick={copy} className={styles.btnPrimary}>
         {copied ? "Copied!" : "Copy to clipboard"}
       </button>
-
-      {embedType === "floating" && (
-        <>
-          <p className={styles.cardLabel} style={{ marginTop: 20 }}>
-            Also open it from anywhere else on your site
-          </p>
-          <p className={styles.hint} style={{ marginBottom: 8 }}>
-            Add this attribute to any other link or button on your site and
-            clicking it opens the widget too — no extra JavaScript needed.
-          </p>
-          <pre className={styles.snippet}>{TRIGGER_SNIPPET}</pre>
-          <button onClick={copyTrigger} className={styles.btnSecondary}>
-            {triggerCopied ? "Copied!" : "Copy to clipboard"}
-          </button>
-        </>
-      )}
     </div>
   );
 }

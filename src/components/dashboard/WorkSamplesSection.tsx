@@ -15,6 +15,7 @@ import {
   validateFile,
   extensionFor,
 } from "@/lib/uploadValidation";
+import { updateOwnerPreview } from "@/lib/widgetLiveUpdate";
 import styles from "./widget-ui.module.css";
 
 const MAX_SAMPLES = 4;
@@ -38,8 +39,19 @@ export default function WorkSamplesSection({
     setSamples(workSamples);
   }, [workSamples]);
 
+  useEffect(() => {
+    updateOwnerPreview({ workSamples: samples });
+  }, [samples]);
+
   function handleRemove(id: string, url: string) {
-    removeWorkSample(id, url).then(() => router.refresh());
+    const previous = samples;
+    setSamples((prev) => prev.filter((s) => s.id !== id));
+    removeWorkSample(id, url)
+      .then(() => router.refresh())
+      .catch((err) => {
+        setSamples(previous);
+        setError(err instanceof Error ? err.message : "Couldn't remove sample.");
+      });
   }
 
   function reorderTo(targetIndex: number) {
