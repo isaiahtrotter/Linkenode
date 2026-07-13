@@ -4,15 +4,16 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  AVATAR_MAX_BYTES,
-  AVATAR_ALLOWED_TYPES,
+  BANNER_MAX_BYTES,
+  BANNER_ALLOWED_TYPES,
   validateFile,
   extensionFor,
 } from "@/lib/uploadValidation";
-import { updateAvatarUrl } from "@/app/dashboard/profile/actions";
+import { updateBannerUrl } from "@/app/dashboard/profile/actions";
+import { updateOwnerPreview } from "@/lib/widgetLiveUpdate";
 import styles from "./widget-ui.module.css";
 
-export default function AvatarUpload({
+export default function BannerUpload({
   profileId,
   currentUrl,
 }: {
@@ -31,8 +32,8 @@ export default function AvatarUpload({
     if (!file) return;
 
     const validationError = validateFile(file, {
-      maxBytes: AVATAR_MAX_BYTES,
-      allowedTypes: AVATAR_ALLOWED_TYPES,
+      maxBytes: BANNER_MAX_BYTES,
+      allowedTypes: BANNER_ALLOWED_TYPES,
     });
     if (validationError) {
       setError(validationError);
@@ -43,7 +44,11 @@ export default function AvatarUpload({
     setUploading(true);
     try {
       const supabase = createClient();
-      const path = `${profileId}.${extensionFor(file)}`;
+      // Reuses the "avatars" bucket's existing RLS policy, which only
+      // checks that the path segment before the first "." is the
+      // uploader's own profile id — a UUID never contains a ".", so
+      // "<id>.banner.<ext>" still satisfies it without a new policy.
+      const path = `${profileId}.banner.${extensionFor(file)}`;
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(path, file, { upsert: true });
@@ -53,8 +58,10 @@ export default function AvatarUpload({
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(path);
 
-      await updateAvatarUrl(`${publicUrl}?t=${Date.now()}`);
-      setPreview(`${publicUrl}?t=${Date.now()}`);
+      const versionedUrl = `${publicUrl}?t=${Date.now()}`;
+      await updateBannerUrl(versionedUrl);
+      setPreview(versionedUrl);
+      updateOwnerPreview({ bannerUrl: versionedUrl });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -64,38 +71,31 @@ export default function AvatarUpload({
   }
 
   return (
-    <div className={styles.avatarUpload}>
+    <div>
       <button
         type="button"
-        className={styles.avatarCircle}
+        className={styles.bannerRect}
         onClick={() => inputRef.current?.click()}
         style={preview ? { backgroundImage: `url(${preview})` } : undefined}
-        aria-label="Change avatar"
+        aria-label="Change banner"
       >
-        {!preview && "+"}
+        {!preview && (uploading ? "Uploading…" : "+ Add banner")}
         <span className={styles.photoHoverOverlay}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
             <circle cx="12" cy="13" r="4" />
           </svg>
         </span>
       </button>
-      <div>
-        <button
-          type="button"
-          className={styles.smallLinkBtn}
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? "Uploading…" : "Change photo"}
-        </button>
-        <p className={styles.hint}>JPG, PNG, or WEBP. Max 1MB.</p>
-        {error && <p className={styles.error}>{error}</p>}
-      </div>
+      <p className={styles.hint}>
+        JPG, PNG, or WEBP. Max 3MB. Best at a 3:1 ratio (e.g. 1200×400px) —
+        it&apos;s cropped to fill, so keep the important part centered.
+      </p>
+      {error && <p className={styles.error}>{error}</p>}
       <input
         ref={inputRef}
         type="file"
-        accept={AVATAR_ALLOWED_TYPES.join(",")}
+        accept={BANNER_ALLOWED_TYPES.join(",")}
         onChange={handleFile}
         style={{ display: "none" }}
       />

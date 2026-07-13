@@ -137,3 +137,33 @@ create policy "users can manage own work sample files"
       select id::text from public.profiles where user_id = auth.uid()
     )
   );
+
+-- 8. Profile banner image. Reuses the existing "avatars" bucket/policy above
+--    with path "<profile_id>.banner.<ext>" — a uuid never contains ".", so
+--    split_part(name, '.', 1) still equals the profile id and no new
+--    storage policy is needed, just the column.
+alter table public.profiles
+  add column if not exists banner_url text;
+
+-- 9. endorsements: public recommendations one connection writes about
+--    another (distinct from connection_notes, which are private). Viewed by
+--    anonymous visitors on the embed, so SELECT is public. The app upserts
+--    on (from_profile_id, to_profile_id) — add a unique constraint on that
+--    pair if one doesn't already exist:
+--    alter table public.endorsements
+--      add constraint endorsements_from_to_unique
+--      unique (from_profile_id, to_profile_id);
+create policy "public can view endorsements"
+  on public.endorsements for select
+  to public
+  using (true);
+
+create policy "users can manage own endorsements"
+  on public.endorsements for all
+  to authenticated
+  using (
+    from_profile_id in (select id from public.profiles where user_id = auth.uid())
+  )
+  with check (
+    from_profile_id in (select id from public.profiles where user_id = auth.uid())
+  );

@@ -54,6 +54,19 @@ export async function updateAvatarUrl(url: string) {
   revalidatePath("/dashboard");
 }
 
+export async function updateBannerUrl(url: string) {
+  const user = await requireSessionUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ banner_url: url })
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+  revalidatePath("/dashboard");
+}
+
 export async function addWorkSample(
   _prevState: ActionState,
   formData: FormData,

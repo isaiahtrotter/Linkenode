@@ -23,6 +23,7 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
     <div id="ring-app" style="position:relative;width:100%;height:100%;overflow:hidden;">
       <div id="dot-highlight-layer" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></div>
       <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <button id="resize-toggle-btn" aria-label="Show resize handle" style="display:none;position:absolute;top:14px;left:14px;width:30px;height:30px;padding:0;border-radius:99px;border:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;"><span id="resize-toggle-icon"></span></button>
       <button id="resize-handle" aria-label="Resize" style="position:absolute;top:14px;left:14px;width:30px;height:30px;padding:0;border-radius:99px;border:none;display:flex;align-items:center;justify-content:center;cursor:nwse-resize;z-index:3;touch-action:none;"><span id="resize-icon"></span></button>
       <div style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;z-index:2;">
         <button id="theme-toggle-btn" class="proto-btn wm-label" style="padding:8px 12px;border-radius:99px;border:none;display:flex;align-items:center;gap:6px;cursor:pointer;"><span id="theme-icon"></span><span id="theme-label">Light</span></button>
@@ -53,6 +54,7 @@ type WidgetOptions = {
   theme?: "light" | "dark";
   cornerRadius?: number;
   shadow?: boolean;
+  appOrigin?: string;
 };
 
 declare global {
@@ -89,7 +91,10 @@ function NetworkWidget({
         script.async = true;
         script.onload = () => {
           if (cancelled) return;
-          window.__initNetworkWidget?.(widgetData, { mode });
+          window.__initNetworkWidget?.(widgetData, {
+            mode,
+            appOrigin: window.location.origin,
+          });
           onReady?.();
         };
         document.body.appendChild(script);

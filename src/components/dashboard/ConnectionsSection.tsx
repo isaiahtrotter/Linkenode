@@ -8,15 +8,33 @@ import {
   cancelConnectionRequest,
   respondToRequest,
   saveConnectionNote,
+  saveEndorsement,
   type SearchResult,
 } from "@/app/dashboard/connections/actions";
 import styles from "./widget-ui.module.css";
 
 type OtherProfile = { id: string; name: string; avatar_url: string | null } | undefined;
 type RequestRow = { request: { id: string }; other: OtherProfile };
-type AcceptedRow = { request: { id: string }; other: OtherProfile; note: string };
+type AcceptedRow = {
+  request: { id: string };
+  other: OtherProfile;
+  note: string;
+  endorsement: string;
+};
 
 const SEARCH_DEBOUNCE_MS = 200;
+const NOTE_MAX_LENGTH = 80;
+
+function MiniAvatar({ url, name }: { url: string | null | undefined; name: string }) {
+  return (
+    <span
+      className={styles.miniAvatar}
+      style={url ? { backgroundImage: `url(${url})` } : undefined}
+    >
+      {!url && name.charAt(0).toUpperCase()}
+    </span>
+  );
+}
 
 export default function ConnectionsSection({
   incoming,
@@ -86,7 +104,10 @@ export default function ConnectionsSection({
     const item = incomingState.find((i) => i.request.id === requestId);
     setIncomingState((prev) => prev.filter((i) => i.request.id !== requestId));
     if (item) {
-      setAcceptedState((prev) => [...prev, { request: item.request, other: item.other, note: "" }]);
+      setAcceptedState((prev) => [
+        ...prev,
+        { request: item.request, other: item.other, note: "", endorsement: "" },
+      ]);
     }
     respondToRequest(requestId, true).catch((err) => {
       setActionError(err instanceof Error ? err.message : "Couldn't accept request.");
@@ -135,7 +156,10 @@ export default function ConnectionsSection({
             {!isSearching &&
               results.map((r) => (
                 <div key={r.id} className={styles.searchDropdownItem}>
-                  <span>{r.name}</span>
+                  <span className={styles.searchDropdownIdentity}>
+                    <MiniAvatar url={r.avatar_url} name={r.name} />
+                    <span>{r.name}</span>
+                  </span>
                   {r.status === "not_connected" && (
                     <button
                       type="button"
@@ -169,7 +193,10 @@ export default function ConnectionsSection({
           <ul className={styles.list}>
             {incomingState.map(({ request, other }) => (
               <li key={request.id} className={styles.row}>
-                <span>{other?.name ?? "Unknown"}</span>
+                <span className={styles.searchDropdownIdentity}>
+                  <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
+                  <span>{other?.name ?? "Unknown"}</span>
+                </span>
                 <div className={styles.rowActions}>
                   <button
                     type="button"
@@ -200,7 +227,10 @@ export default function ConnectionsSection({
           <ul className={styles.list}>
             {outgoingState.map(({ request, other }) => (
               <li key={request.id} className={styles.row}>
-                <span>{other?.name ?? "Unknown"}</span>
+                <span className={styles.searchDropdownIdentity}>
+                  <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
+                  <span>{other?.name ?? "Unknown"}</span>
+                </span>
                 <div className={styles.rowActions}>
                   <span className={styles.badge}>Pending</span>
                   <button
@@ -221,21 +251,43 @@ export default function ConnectionsSection({
         Your network
       </p>
       <ul className={styles.list}>
-        {acceptedState.map(({ request, other, note }) => (
-          <li key={request.id} className={styles.connectionRow}>
-            <span className={styles.connectionName}>{other?.name ?? "Unknown"}</span>
+        {acceptedState.map(({ request, other, note, endorsement }) => (
+          <li key={request.id} className={styles.connectionCard}>
+            <span className={styles.searchDropdownIdentity}>
+              <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
+              <span className={styles.connectionName}>{other?.name ?? "Unknown"}</span>
+            </span>
             <form action={saveConnectionNote} className={styles.noteForm}>
               <input type="hidden" name="requestId" value={request.id} />
               <input
                 name="note"
                 defaultValue={note}
-                placeholder="How do you know them?"
+                maxLength={NOTE_MAX_LENGTH}
+                placeholder="How do you know them? (private)"
                 className={styles.input}
               />
               <button type="submit" className={styles.smallLinkBtn}>
                 Save
               </button>
             </form>
+            {other && (
+              <form
+                action={async (formData) => {
+                  await saveEndorsement(other.id, (formData.get("endorsement") as string) ?? "");
+                }}
+                className={styles.noteForm}
+              >
+                <input
+                  name="endorsement"
+                  defaultValue={endorsement}
+                  placeholder="Write a public recommendation…"
+                  className={styles.input}
+                />
+                <button type="submit" className={styles.smallLinkBtn}>
+                  Save
+                </button>
+              </form>
+            )}
           </li>
         ))}
         {acceptedState.length === 0 && (

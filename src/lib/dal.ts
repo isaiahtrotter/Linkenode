@@ -30,6 +30,7 @@ export type Profile = {
   bio: string | null;
   website: string | null;
   avatar_url: string | null;
+  banner_url: string | null;
   embed_key: string;
   widget_settings: WidgetSettings | null;
 };
@@ -89,19 +90,24 @@ export const getOwnConnectionsData = cache(async () => {
     ),
   );
 
-  const [profilesRes, notesRes] = await Promise.all([
+  const [profilesRes, notesRes, endorsementsRes] = await Promise.all([
     otherIds.length
       ? supabase.from("profiles").select("id, name, avatar_url").in("id", otherIds)
       : Promise.resolve({ data: [], error: null }),
     supabase.from("connection_notes").select("*").eq("profile_id", myId),
+    supabase.from("endorsements").select("*").eq("from_profile_id", myId),
   ]);
 
   if (profilesRes.error) throw profilesRes.error;
   if (notesRes.error) throw notesRes.error;
+  if (endorsementsRes.error) throw endorsementsRes.error;
 
   const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
   const noteByRequestId = new Map(
     (notesRes.data ?? []).map((n) => [n.connection_request_id, n.note]),
+  );
+  const endorsementByToId = new Map(
+    (endorsementsRes.data ?? []).map((e) => [e.to_profile_id, e.text]),
   );
 
   const incoming = (requests ?? [])
@@ -120,8 +126,44 @@ export const getOwnConnectionsData = cache(async () => {
         request: r,
         other: profileById.get(otherId),
         note: noteByRequestId.get(r.id) ?? "",
+        endorsement: endorsementByToId.get(otherId) ?? "",
       };
     });
 
   return { incoming, outgoing, accepted };
+});
+
+export type DirectoryEntry = {
+  id: string;
+  name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  status: "not_connected" | "pending_outgoing" | "pending_incoming" | "connected";
+};
+
+export const getNetworkDirectory = cache(async (): Promise<DirectoryEntry[]> => {
+  const me = await getOwnProfile();
+  if (!me) return [];
+
+  const supabase = await createClient();
+  const [{ data: allProfiles, error }, connections] = await Promise.all([
+    supabase.from("profiles").select("id, name, bio, avatar_url").order("name"),
+    getOwnConnectionsData(),
+  ]);
+  if (error) throw error;
+
+  const statusById = new Map<string, DirectoryEntry["status"]>();
+  connections.incoming.forEach(({ other }) => {
+    if (other) statusById.set(other.id, "pending_incoming");
+  });
+  connections.outgoing.forEach(({ other }) => {
+    if (other) statusById.set(other.id, "pending_outgoing");
+  });
+  connections.accepted.forEach(({ other }) => {
+    if (other) statusById.set(other.id, "connected");
+  });
+
+  return (allProfiles ?? [])
+    .filter((p) => p.id !== me.id)
+    .map((p) => ({ ...p, status: statusById.get(p.id) ?? "not_connected" }));
 });

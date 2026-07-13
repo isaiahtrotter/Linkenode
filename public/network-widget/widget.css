@@ -168,6 +168,23 @@ body { margin:0; font-family: -apple-system, sans-serif; }
         transition: none;
       }
 
+      /* Inline mode hides the always-on resize handle by default (manually
+         resizing away from "fill container" is a deliberate, secondary
+         action) and shows a small toggle button instead. Clicking it
+         reveals the real handle to drag. */
+      #widget-root.mode-inline #resize-handle {
+        display: none !important;
+      }
+      #widget-root.mode-inline #resize-toggle-btn {
+        display: flex !important;
+      }
+      #widget-root.mode-inline.show-resize #resize-handle {
+        display: flex !important;
+      }
+      #widget-root.mode-inline.show-resize #resize-toggle-btn {
+        display: none !important;
+      }
+
       @media (max-width: 480px) {
         .panel-expanded {
           height: calc(100vh - 32px);

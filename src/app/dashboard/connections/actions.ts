@@ -71,7 +71,7 @@ export async function sendConnectionRequest(recipientId: string) {
   });
   if (error) throw error;
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/connections");
 }
 
 export async function cancelConnectionRequest(requestId: string) {
@@ -86,7 +86,7 @@ export async function cancelConnectionRequest(requestId: string) {
     .eq("requester_id", me.id);
   if (error) throw error;
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/connections");
 }
 
 export async function respondToRequest(requestId: string, accept: boolean) {
@@ -97,7 +97,7 @@ export async function respondToRequest(requestId: string, accept: boolean) {
     .eq("id", requestId);
   if (error) throw error;
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/connections");
 }
 
 export async function saveConnectionNote(formData: FormData): Promise<void> {
@@ -117,5 +117,22 @@ export async function saveConnectionNote(formData: FormData): Promise<void> {
 
   if (error) throw error;
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/connections");
+}
+
+export async function saveEndorsement(toProfileId: string, text: string) {
+  const me = await getOwnProfile();
+  if (!me) throw new Error("Profile not found.");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("endorsements")
+    .upsert(
+      { from_profile_id: me.id, to_profile_id: toProfileId, text },
+      { onConflict: "from_profile_id,to_profile_id" },
+    );
+
+  if (error) throw error;
+
+  revalidatePath("/dashboard/connections");
 }

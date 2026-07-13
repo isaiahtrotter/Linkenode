@@ -36,12 +36,48 @@
   background: #f5f5f5;
 }
 
+.body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.sideNav {
+  flex-shrink: 0;
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 28px 12px;
+}
+
+.navLink {
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #55544f;
+}
+
+.navLink:hover {
+  background: #f5f4f2;
+}
+
+.navLinkActive {
+  background: #1c1c1a;
+  color: #f1efe8;
+}
+
+.navLinkActive:hover {
+  background: #1c1c1a;
+}
+
 .main {
   flex: 1;
   padding: 28px 28px 64px;
-  max-width: 1100px;
+  max-width: 930px;
   width: 100%;
-  margin: 0 auto;
 }
 
 .error {

@@ -23,6 +23,12 @@ export async function createClient() {
           }
         },
       },
+      global: {
+        // Next.js's fetch patching would otherwise cache these REST calls
+        // in its Data Cache (keyed by URL), so e.g. a connection's updated
+        // name wouldn't show up until that cache entry happened to expire.
+        fetch: (url, options) => fetch(url, { ...options, cache: "no-store" }),
+      },
     },
   );
 }

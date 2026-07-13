@@ -48,6 +48,14 @@
         var launcherIconEl = launcherBtn.querySelector("svg");
         if (launcherIconEl) launcherIconEl.style.display = showIcon ? "" : "none";
 
+        // Both "Add me" and "Create your network" send visitors to sign up
+        // / log in on the app itself, not a dead "#" link.
+        var loginUrl = (options.appOrigin || "") + "/";
+        var addOwnerBtnEl = document.getElementById("add-owner-btn");
+        if (addOwnerBtnEl) addOwnerBtnEl.href = loginUrl;
+        var shareNetworkBtnEl = document.getElementById("share-network-btn");
+        if (shareNetworkBtnEl) shareNetworkBtnEl.href = loginUrl;
+
         var width = container.clientWidth || 460,
           height = container.clientHeight || 560;
 
@@ -100,6 +108,7 @@
           bio: profile.bio,
           website: profile.website,
           avatarOverride: profile.avatar_url || null,
+          bannerUrl: profile.banner_url || null,
           workSamples: profile.workSamples || [],
         };
 
@@ -113,6 +122,7 @@
             endorsement: c.endorsement || null,
             relationship: c.relationship || null,
             avatarOverride: c.avatar_url || null,
+            bannerUrl: c.banner_url || null,
             workSamples: c.workSamples || [],
           };
         });
@@ -363,6 +373,10 @@
           resizeHandle.style.color = t.textSecondary;
           resizeHandle.style.background = t.chip;
           document.getElementById("resize-icon").innerHTML = icon("resize", 13);
+          var resizeToggleBtn = document.getElementById("resize-toggle-btn");
+          resizeToggleBtn.style.color = t.textSecondary;
+          resizeToggleBtn.style.background = t.chip;
+          document.getElementById("resize-toggle-icon").innerHTML = icon("resize", 13);
           var toggleBtn = document.getElementById("theme-toggle-btn");
           toggleBtn.style.color = t.textSecondary;
           toggleBtn.style.background = t.chip;
@@ -1370,6 +1384,12 @@
             mixHex(C, "#C9D8EA", 0.35) +
             " 100%)";
 
+          var bannerStyle = person.bannerUrl
+            ? "background-image:url(" +
+              person.bannerUrl +
+              ");background-size:cover;background-position:center;"
+            : "background:" + sunrise + ";";
+
           var relBlock = person.relationship
             ? '<p style="font-size:12.5px;line-height:1.3;color:' +
               C +
@@ -1380,9 +1400,9 @@
 
           panelContent.innerHTML =
             '<div style="position:relative;height:104px;">' +
-            '<div style="position:absolute;inset:0;background:' +
-            sunrise +
-            ';"></div>' +
+            '<div style="position:absolute;inset:0;' +
+            bannerStyle +
+            '"></div>' +
             '<button id="close-panel" type="button" style="position:absolute;top:12px;right:12px;width:26px;height:26px;min-width:26px;min-height:26px;padding:0;margin:0;line-height:1;box-sizing:border-box;border-radius:50%;background:rgba(0,0,0,0.4);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">' +
             icon("x", 15) +
             "</button>" +
@@ -1573,6 +1593,9 @@
             setTimeout(function () {
               suppressOutsideClick = false;
             }, 60);
+            if (widgetRoot.classList.contains("mode-inline")) {
+              widgetRoot.classList.remove("show-resize");
+            }
           }
           function onMouseMove(e) {
             move(e.clientX, e.clientY);
@@ -1614,6 +1637,13 @@
           },
           { passive: true },
         );
+
+        document
+          .getElementById("resize-toggle-btn")
+          .addEventListener("click", function (e) {
+            e.stopPropagation();
+            widgetRoot.classList.add("show-resize");
+          });
 
         function syncMobileState() {
           if (window.innerWidth <= 480) {
