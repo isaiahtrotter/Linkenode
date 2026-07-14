@@ -4,7 +4,17 @@
         var mode = options.mode || "floating";
         var initialTheme = options.theme || settings.theme || "light";
         var cornerRadius = options.cornerRadius != null ? options.cornerRadius : (settings.cornerRadius != null ? settings.cornerRadius : 24);
-        var shadowOn = options.shadow != null ? options.shadow : (settings.shadow != null ? settings.shadow : true);
+
+        // shadow used to be a boolean (on/off); now it's a 0-100 intensity.
+        // Coerce old saved boolean values so existing profiles keep working.
+        var shadowRaw = options.shadow != null ? options.shadow : (settings.shadow != null ? settings.shadow : 60);
+        var shadowIntensity = typeof shadowRaw === "boolean" ? (shadowRaw ? 60 : 0) : shadowRaw;
+
+        var btnFontSize = options.buttonFontSize != null ? options.buttonFontSize : (settings.buttonFontSize != null ? settings.buttonFontSize : 13);
+        var btnFontWeight = options.buttonFontWeight != null ? options.buttonFontWeight : (settings.buttonFontWeight != null ? settings.buttonFontWeight : 600);
+        var btnLetterSpacing = options.buttonLetterSpacing != null ? options.buttonLetterSpacing : (settings.buttonLetterSpacing != null ? settings.buttonLetterSpacing : 0);
+        var btnPaddingX = options.buttonPaddingX != null ? options.buttonPaddingX : (settings.buttonPaddingX != null ? settings.buttonPaddingX : 16);
+        var btnPaddingY = options.buttonPaddingY != null ? options.buttonPaddingY : (settings.buttonPaddingY != null ? settings.buttonPaddingY : 14);
 
         var svg = d3.select("#graph-svg");
         var container = document.getElementById("ring-app");
@@ -18,10 +28,22 @@
           widgetRoot.classList.add("mode-inline");
         }
         widgetRoot.style.setProperty("--wt-radius", cornerRadius + "px");
-        widgetRoot.style.setProperty(
-          "--wt-shadow",
-          shadowOn ? "0 20px 60px rgba(0,0,0,0.25)" : "none",
-        );
+        if (shadowIntensity > 0) {
+          var shadowOffsetY = Math.round(8 + (shadowIntensity / 100) * 12);
+          var shadowBlur = Math.round(20 + (shadowIntensity / 100) * 40);
+          var shadowOpacity = ((shadowIntensity / 100) * 0.25).toFixed(3);
+          widgetRoot.style.setProperty(
+            "--wt-shadow",
+            "0 " + shadowOffsetY + "px " + shadowBlur + "px rgba(0,0,0," + shadowOpacity + ")",
+          );
+        } else {
+          widgetRoot.style.setProperty("--wt-shadow", "none");
+        }
+        widgetRoot.style.setProperty("--wt-btn-font-size", btnFontSize + "px");
+        widgetRoot.style.setProperty("--wt-btn-font-weight", btnFontWeight);
+        widgetRoot.style.setProperty("--wt-btn-letter-spacing", btnLetterSpacing + "px");
+        widgetRoot.style.setProperty("--wt-btn-padding-x", btnPaddingX + "px");
+        widgetRoot.style.setProperty("--wt-btn-padding-y", btnPaddingY + "px");
 
         if (mode === "floating") {
           var corner = options.corner || settings.corner || "bottom-right";

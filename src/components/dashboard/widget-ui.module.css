@@ -5,21 +5,19 @@
 
 .page {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   align-items: start;
-}
-
-@media (max-width: 1100px) {
-  .page {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 700px) {
   .page {
     grid-template-columns: 1fr;
   }
+}
+
+.fullSpan {
+  grid-column: 1 / -1;
 }
 
 .directoryGrid {
@@ -552,6 +550,84 @@
   flex: 1;
 }
 
+/* Your network — compact accordion (scales to 20+ connections) */
+
+.networkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.networkRow {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.networkRow:last-child {
+  border-bottom: none;
+}
+
+.networkRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.networkRowHeader:hover {
+  background: #f5f5f6;
+}
+
+.networkRowMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: #8a8a8f;
+}
+
+.networkDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6d28d9;
+  flex-shrink: 0;
+}
+
+.networkStar {
+  font-size: 12px;
+  color: #d4a017;
+  line-height: 1;
+}
+
+.networkChevron {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #8a8a8f;
+  flex-shrink: 0;
+}
+
+.networkRowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 4px 12px;
+  animation: dropdownItemIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Embed section */
 
 .modeToggle {
@@ -730,4 +806,33 @@
 
 .switchOn .switchKnob {
   transform: translateX(16px);
+}
+
+/* Button style preview (mirrors public/network-widget/widget.css .launcher) */
+
+.buttonPreviewWrap {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttonMimic {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 14px;
+  background: #faf9f6;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.buttonMimicLabel {
+  color: rgba(0, 0, 0, 0.72);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
 }

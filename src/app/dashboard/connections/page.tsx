@@ -17,11 +17,11 @@ export default async function ConnectionsPage() {
       </div>
 
       <div className={styles.mainCol}>
-        <YourNetworkSection accepted={connections.accepted} />
+        <NetworkDirectory initialDirectory={directory} />
       </div>
 
-      <div className={styles.mainCol}>
-        <NetworkDirectory initialDirectory={directory} />
+      <div className={`${styles.mainCol} ${styles.fullSpan}`}>
+        <YourNetworkSection accepted={connections.accepted} />
       </div>
     </div>
   );

@@ -20,7 +20,12 @@ export const requireSessionUser = cache(async () => {
 export type WidgetSettings = {
   theme: "light" | "dark";
   cornerRadius: number;
-  shadow: boolean;
+  shadow: number; // 0-100 intensity
+  buttonFontSize: number; // px
+  buttonFontWeight: number; // 400-700
+  buttonLetterSpacing: number; // px
+  buttonPaddingX: number; // px
+  buttonPaddingY: number; // px
 };
 
 export type Profile = {

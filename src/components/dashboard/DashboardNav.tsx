@@ -7,6 +7,7 @@ import styles from "../../app/dashboard/dashboard.module.css";
 const LINKS = [
   { href: "/dashboard", label: "Profile" },
   { href: "/dashboard/connections", label: "Connections" },
+  { href: "/dashboard/embed", label: "Embed" },
 ];
 
 export default function DashboardNav() {
