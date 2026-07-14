@@ -1,26 +1,27 @@
-import { getOwnProfile, getOwnWorkSamples } from "@/lib/dal";
-import ProfileSection from "@/components/dashboard/ProfileSection";
-import WorkSamplesSection from "@/components/dashboard/WorkSamplesSection";
-import styles from "@/components/dashboard/widget-ui.module.css";
+import {
+  getOwnProfile,
+  getOwnWorkSamples,
+  getOwnConnectionsData,
+  getNetworkDirectory,
+} from "@/lib/dal";
+import DashboardCanvas from "@/components/dashboard/DashboardCanvas";
 
 export default async function DashboardPage() {
   const profile = await getOwnProfile();
   if (!profile) return null;
 
-  const workSamples = await getOwnWorkSamples();
+  const [workSamples, connections, directory] = await Promise.all([
+    getOwnWorkSamples(),
+    getOwnConnectionsData(),
+    getNetworkDirectory(),
+  ]);
 
   return (
-    <>
-      <p className={styles.pageHeading}>Profile</p>
-      <div className={styles.page}>
-        <div className={styles.mainCol}>
-          <ProfileSection profile={profile} />
-        </div>
-
-        <div className={styles.mainCol}>
-          <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
-        </div>
-      </div>
-    </>
+    <DashboardCanvas
+      profile={profile}
+      workSamples={workSamples}
+      connections={connections}
+      directory={directory}
+    />
   );
 }

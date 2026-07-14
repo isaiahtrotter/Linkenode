@@ -30,5 +30,5 @@ export async function updateWidgetSettings(settings: WidgetSettings) {
       "Nothing was saved — the profiles table may be missing its update policy or the widget_settings column. See supabase/policies-reference.sql.",
     );
   }
-  revalidatePath("/dashboard/embed");
+  revalidatePath("/dashboard");
 }

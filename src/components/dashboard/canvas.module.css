@@ -1,0 +1,236 @@
+.canvasViewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: #f3f2ee;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.canvasViewport[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.canvasLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.frame {
+  position: absolute;
+}
+
+.frameLabel {
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a8a8f;
+  margin: 0 0 10px;
+}
+
+.frameBody {
+  padding: 8px;
+  border-radius: 20px;
+  outline: 1px dashed rgba(0, 0, 0, 0.14);
+  outline-offset: 14px;
+}
+
+/* Selection affordance on the two widget previews */
+
+.selectableWrap {
+  cursor: pointer;
+  border-radius: 16px;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color 0.15s ease;
+}
+
+.selectableWrap:hover {
+  outline-color: rgba(99, 91, 255, 0.35);
+}
+
+.selectableWrapActive {
+  outline-color: #635bff;
+}
+
+.previewOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* Top chrome bar — fixed, outside the canvas transform */
+
+.topBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.topBarBrand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.topBarBrandIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: #635bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.topBarBrandText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1a;
+  white-space: nowrap;
+}
+
+.navPills {
+  display: flex;
+  gap: 2px;
+}
+
+.navPill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4f;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navPill svg {
+  color: #8a8a8f;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.navPill:hover {
+  background: #f5f5f7;
+  color: #1c1c1a;
+}
+
+.navPill:hover svg {
+  color: #635bff;
+}
+
+.topBarRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.signOutBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a4f;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.signOutBtn:hover {
+  background: #f5f5f7;
+  color: #1c1c1a;
+}
+
+/* Figma-style inspector panel — fixed, outside the canvas transform */
+
+.inspectorPanel {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  background: #ffffff;
+  border-left: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.07);
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 15;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.inspectorPanelOpen {
+  transform: translateX(0);
+}
+
+.inspectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.inspectorTitle {
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a8a8f;
+  margin: 0;
+}
+
+.inspectorCloseBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #8a8a8f;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.inspectorCloseBtn:hover {
+  background: #f5f5f7;
+  color: #1c1c1a;
+}

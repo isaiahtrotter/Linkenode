@@ -71,7 +71,7 @@ export async function sendConnectionRequest(recipientId: string) {
   });
   if (error) throw error;
 
-  revalidatePath("/dashboard/connections");
+  revalidatePath("/dashboard");
 }
 
 export async function cancelConnectionRequest(requestId: string) {
@@ -86,7 +86,7 @@ export async function cancelConnectionRequest(requestId: string) {
     .eq("requester_id", me.id);
   if (error) throw error;
 
-  revalidatePath("/dashboard/connections");
+  revalidatePath("/dashboard");
 }
 
 export async function respondToRequest(requestId: string, accept: boolean) {
@@ -97,7 +97,7 @@ export async function respondToRequest(requestId: string, accept: boolean) {
     .eq("id", requestId);
   if (error) throw error;
 
-  revalidatePath("/dashboard/connections");
+  revalidatePath("/dashboard");
 }
 
 export async function saveConnectionNote(formData: FormData): Promise<void> {
@@ -117,7 +117,7 @@ export async function saveConnectionNote(formData: FormData): Promise<void> {
 
   if (error) throw error;
 
-  revalidatePath("/dashboard/connections");
+  revalidatePath("/dashboard");
 }
 
 export async function saveEndorsement(toProfileId: string, text: string) {
@@ -134,5 +134,5 @@ export async function saveEndorsement(toProfileId: string, text: string) {
 
   if (error) throw error;
 
-  revalidatePath("/dashboard/connections");
+  revalidatePath("/dashboard");
 }
