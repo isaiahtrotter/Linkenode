@@ -10,14 +10,17 @@ export default async function DashboardPage() {
   const workSamples = await getOwnWorkSamples();
 
   return (
-    <div className={styles.page}>
-      <div className={styles.mainCol}>
-        <ProfileSection profile={profile} />
-      </div>
+    <>
+      <p className={styles.pageHeading}>Profile</p>
+      <div className={styles.page}>
+        <div className={styles.mainCol}>
+          <ProfileSection profile={profile} />
+        </div>
 
-      <div className={styles.mainCol}>
-        <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
+        <div className={styles.mainCol}>
+          <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

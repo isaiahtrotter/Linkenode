@@ -1,105 +1,120 @@
 .shell {
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  min-height: 100vh;
   background-color: #ffffff;
 }
 
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 28px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.09);
-}
-
-.wordmark {
-  font-family: "Space Mono", ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #1c1c1a;
-}
-
-.signOutBtn {
-  border: 1px solid rgba(0, 0, 0, 0.13);
-  background: #fff;
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #1c1c1a;
-  transition: background-color 0.15s ease, border-color 0.15s ease,
-    transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.signOutBtn:hover {
-  background: #f8f8f9;
-  border-color: rgba(0, 0, 0, 0.22);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
-}
-
-.signOutBtn:active {
-  transform: translateY(0);
-  box-shadow: none;
-  background: #f1f1f2;
-}
-
-.body {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.sideNav {
+.sidebar {
+  width: 232px;
   flex-shrink: 0;
-  width: 170px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 16px;
-  margin: 28px 0 28px 12px;
-  height: fit-content;
-  background: #fafafa;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 12px;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px 12px;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px 22px;
+}
+
+.sidebarBrandIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: #635bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Mono", ui-monospace, Menlo, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.sidebarBrandText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1a;
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .navLink {
-  padding: 9px 14px;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 7px;
   font-size: 13.5px;
   font-weight: 500;
-  color: #6b6b70;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease,
-    box-shadow 0.15s ease;
+  color: #4a4a4f;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navLink svg {
+  flex-shrink: 0;
+  color: #8a8a8f;
+  transition: color 0.15s ease;
 }
 
 .navLink:hover {
-  background: #ffffff;
+  background: #f5f5f7;
   color: #1c1c1a;
-  transform: translateX(2px);
 }
 
 .navLinkActive {
-  background: #fff;
-  color: #1c1c1a;
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  background: #f1effe;
+  color: #635bff;
+}
+
+.navLinkActive svg {
+  color: #635bff;
 }
 
 .navLinkActive:hover {
-  background: #fff;
-  transform: none;
+  background: #f1effe;
+  color: #635bff;
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.signOutBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: none;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #4a4a4f;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.signOutBtn:hover {
+  background: #f5f5f7;
+  color: #1c1c1a;
 }
 
 .main {
   flex: 1;
-  padding: 28px 28px 64px;
+  min-width: 0;
+  padding: 24px 40px 64px;
   max-width: 1400px;
   width: 100%;
 }

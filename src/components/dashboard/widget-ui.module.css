@@ -3,6 +3,16 @@
    itself — public/network-widget/ — keeps its own separate look; this file
    only styles the admin dashboard around it.) */
 
+.pageHeading {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1c1c1a;
+  letter-spacing: -0.01em;
+  margin: 4px 0 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 .page {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

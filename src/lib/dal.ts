@@ -30,8 +30,10 @@ export type WidgetSettings = {
   buttonPaddingY: number; // px
   buttonBorderColor: string; // hex
   buttonBorderWidth: number; // px
+  buttonBorderRadius: number; // px
   buttonBackgroundColor: string; // hex
   buttonHoverStyle: ButtonHoverStyle;
+  buttonFontFamily: string; // FONT_OPTIONS id, see EmbedDesigner.tsx
 };
 
 export type Profile = {

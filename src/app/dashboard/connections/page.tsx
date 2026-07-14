@@ -11,18 +11,21 @@ export default async function ConnectionsPage() {
   ]);
 
   return (
-    <div className={styles.page}>
-      <div className={styles.mainCol}>
-        <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
-      </div>
+    <>
+      <p className={styles.pageHeading}>Connections</p>
+      <div className={styles.page}>
+        <div className={styles.mainCol}>
+          <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
+        </div>
 
-      <div className={styles.mainCol}>
-        <NetworkDirectory initialDirectory={directory} />
-      </div>
+        <div className={styles.mainCol}>
+          <NetworkDirectory initialDirectory={directory} />
+        </div>
 
-      <div className={`${styles.mainCol} ${styles.fullSpan}`}>
-        <YourNetworkSection accepted={connections.accepted} />
+        <div className={`${styles.mainCol} ${styles.fullSpan}`}>
+          <YourNetworkSection accepted={connections.accepted} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

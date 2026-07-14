@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import NetworkWidget from "@/components/NetworkWidget";
 import { updateWidgetSettings } from "@/app/dashboard/actions";
@@ -9,6 +9,27 @@ import styles from "./widget-ui.module.css";
 
 const MAX_CORNER_RADIUS = 30;
 const DEFAULT_LABEL = "View My Network";
+
+// Keep in sync with FONT_OPTIONS in public/network-widget/widget.js.
+const FONT_OPTIONS: { id: string; label: string; family: string; google: string | null }[] = [
+  { id: "system", label: "System default", family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif", google: null },
+  { id: "inter", label: "Inter", family: "'Inter', sans-serif", google: "Inter:wght@400;500;600;700" },
+  { id: "roboto", label: "Roboto", family: "'Roboto', sans-serif", google: "Roboto:wght@400;500;700" },
+  { id: "poppins", label: "Poppins", family: "'Poppins', sans-serif", google: "Poppins:wght@400;500;600;700" },
+  { id: "montserrat", label: "Montserrat", family: "'Montserrat', sans-serif", google: "Montserrat:wght@400;500;600;700" },
+  { id: "space-grotesk", label: "Space Grotesk", family: "'Space Grotesk', sans-serif", google: "Space+Grotesk:wght@400;500;600;700" },
+  { id: "dm-sans", label: "DM Sans", family: "'DM Sans', sans-serif", google: "DM+Sans:wght@400;500;700" },
+  { id: "work-sans", label: "Work Sans", family: "'Work Sans', sans-serif", google: "Work+Sans:wght@400;500;600;700" },
+  { id: "nunito", label: "Nunito", family: "'Nunito', sans-serif", google: "Nunito:wght@400;600;700" },
+  { id: "playfair-display", label: "Playfair Display", family: "'Playfair Display', serif", google: "Playfair+Display:wght@400;600;700" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', serif", google: "Merriweather:wght@400;700" },
+  { id: "lora", label: "Lora", family: "'Lora', serif", google: "Lora:wght@400;500;600;700" },
+  { id: "space-mono", label: "Space Mono", family: "'Space Mono', monospace", google: "Space+Mono:wght@400;700" },
+  { id: "jetbrains-mono", label: "JetBrains Mono", family: "'JetBrains Mono', monospace", google: "JetBrains+Mono:wght@400;500;700" },
+  { id: "oswald", label: "Oswald", family: "'Oswald', sans-serif", google: "Oswald:wght@400;500;600;700" },
+  { id: "bebas-neue", label: "Bebas Neue", family: "'Bebas Neue', sans-serif", google: "Bebas+Neue" },
+];
+const FONT_BY_ID = new Map(FONT_OPTIONS.map((f) => [f.id, f]));
 
 const DEFAULT_SETTINGS: WidgetSettings = {
   theme: "light",
@@ -21,8 +42,10 @@ const DEFAULT_SETTINGS: WidgetSettings = {
   buttonPaddingY: 14,
   buttonBorderColor: "#e0ded8",
   buttonBorderWidth: 1,
+  buttonBorderRadius: 14,
   buttonBackgroundColor: "#faf9f6",
   buttonHoverStyle: "scale",
+  buttonFontFamily: "system",
 };
 
 const HOVER_STYLES: { value: ButtonHoverStyle; label: string }[] = [
@@ -83,6 +106,65 @@ function LauncherIcon() {
   );
 }
 
+function FontPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const selected = FONT_BY_ID.get(value) ?? FONT_OPTIONS[0];
+  const filtered = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return FONT_OPTIONS;
+    return FONT_OPTIONS.filter((f) => f.label.toLowerCase().includes(trimmed));
+  }, [query]);
+
+  return (
+    <div className={styles.searchWrap}>
+      <input
+        value={isOpen ? query : selected.label}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => {
+          setIsOpen(true);
+          setQuery("");
+        }}
+        onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+        placeholder="Search fonts…"
+        className={styles.input}
+      />
+      {isOpen && (
+        <div className={styles.searchDropdown}>
+          {filtered.length === 0 && (
+            <div className={styles.searchDropdownItem}>No matches.</div>
+          )}
+          {filtered.map((f, index) => (
+            <div
+              key={f.id}
+              className={styles.searchDropdownItem}
+              style={{
+                fontFamily: f.family,
+                animationDelay: `${Math.min(index, 6) * 20}ms`,
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onChange(f.id);
+                setIsOpen(false);
+                setQuery("");
+              }}
+            >
+              <span>{f.label}</span>
+              {f.id === value && <span style={{ fontFamily: "inherit" }}>✓</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmbedDesigner({
   embedKey,
   initialSettings,
@@ -108,6 +190,7 @@ export default function EmbedDesigner({
   );
   const [theme, setTheme] = useState(settings.theme);
   const [shadow, setShadow] = useState(initialShadow);
+  const [buttonFontFamily, setButtonFontFamily] = useState(settings.buttonFontFamily);
   const [buttonFontSize, setButtonFontSize] = useState(settings.buttonFontSize);
   const [buttonFontWeight, setButtonFontWeight] = useState(settings.buttonFontWeight);
   const [buttonLetterSpacing, setButtonLetterSpacing] = useState(settings.buttonLetterSpacing);
@@ -115,6 +198,7 @@ export default function EmbedDesigner({
   const [buttonPaddingY, setButtonPaddingY] = useState(settings.buttonPaddingY);
   const [buttonBorderColor, setButtonBorderColor] = useState(settings.buttonBorderColor);
   const [buttonBorderWidth, setButtonBorderWidth] = useState(settings.buttonBorderWidth);
+  const [buttonBorderRadius, setButtonBorderRadius] = useState(settings.buttonBorderRadius);
   const [buttonBackgroundColor, setButtonBackgroundColor] = useState(
     settings.buttonBackgroundColor,
   );
@@ -131,6 +215,20 @@ export default function EmbedDesigner({
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
+
+  // Loads every candidate font once so both the picker list and the button
+  // preview can render each option in its own actual typeface.
+  useEffect(() => {
+    if (document.getElementById("wt-font-picker-preview-link")) return;
+    const families = FONT_OPTIONS.filter((f) => f.google)
+      .map((f) => `family=${f.google}`)
+      .join("&");
+    const link = document.createElement("link");
+    link.id = "wt-font-picker-preview-link";
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    document.head.appendChild(link);
+  }, []);
 
   function getWidgetRoot(): HTMLElement | null {
     return containerRef.current?.querySelector("#widget-root") ?? null;
@@ -157,6 +255,26 @@ export default function EmbedDesigner({
     }
   }
 
+  function handleResetAppearance() {
+    handleRadiusChange(DEFAULT_SETTINGS.cornerRadius);
+    handleShadowChange(DEFAULT_SETTINGS.shadow);
+    handleThemeChange(DEFAULT_SETTINGS.theme);
+  }
+
+  function handleResetButtonStyle() {
+    setButtonFontFamily(DEFAULT_SETTINGS.buttonFontFamily);
+    setButtonFontSize(DEFAULT_SETTINGS.buttonFontSize);
+    setButtonFontWeight(DEFAULT_SETTINGS.buttonFontWeight);
+    setButtonLetterSpacing(DEFAULT_SETTINGS.buttonLetterSpacing);
+    setButtonPaddingX(DEFAULT_SETTINGS.buttonPaddingX);
+    setButtonPaddingY(DEFAULT_SETTINGS.buttonPaddingY);
+    setButtonBorderColor(DEFAULT_SETTINGS.buttonBorderColor);
+    setButtonBorderWidth(DEFAULT_SETTINGS.buttonBorderWidth);
+    setButtonBorderRadius(DEFAULT_SETTINGS.buttonBorderRadius);
+    setButtonBackgroundColor(DEFAULT_SETTINGS.buttonBackgroundColor);
+    setButtonHoverStyle(DEFAULT_SETTINGS.buttonHoverStyle);
+  }
+
   function handleSave() {
     setSaveState("saved");
     setSaveError(null);
@@ -166,6 +284,7 @@ export default function EmbedDesigner({
       theme,
       cornerRadius,
       shadow,
+      buttonFontFamily,
       buttonFontSize,
       buttonFontWeight,
       buttonLetterSpacing,
@@ -173,6 +292,7 @@ export default function EmbedDesigner({
       buttonPaddingY,
       buttonBorderColor,
       buttonBorderWidth,
+      buttonBorderRadius,
       buttonBackgroundColor,
       buttonHoverStyle,
     }).catch((err) => {
@@ -215,11 +335,13 @@ export default function EmbedDesigner({
     paddingBottom: buttonPaddingY,
     paddingLeft: buttonPaddingX,
     paddingRight: buttonPaddingX,
+    borderRadius: buttonBorderRadius,
     "--mimic-bg": buttonBackgroundColor,
     "--mimic-border-color": buttonBorderColor,
     "--mimic-border-width": `${buttonBorderWidth}px`,
   };
   const hoverClass = HOVER_STYLE_CLASS[buttonHoverStyle];
+  const selectedFont = FONT_BY_ID.get(buttonFontFamily) ?? FONT_OPTIONS[0];
 
   return (
     <div className={styles.page}>
@@ -242,6 +364,7 @@ export default function EmbedDesigner({
             <span
               className={styles.buttonMimicLabel}
               style={{
+                fontFamily: selectedFont.family,
                 fontSize: buttonFontSize,
                 fontWeight: buttonFontWeight,
                 letterSpacing: buttonLetterSpacing,
@@ -255,7 +378,14 @@ export default function EmbedDesigner({
 
       <div className={styles.mainCol}>
         <div className={`${styles.card} ${styles.controlsCard}`}>
-          <p className={styles.cardLabel}>Appearance</p>
+          <div className={styles.controlLabelRow} style={{ marginBottom: 4 }}>
+            <p className={styles.cardLabel} style={{ margin: 0 }}>
+              Appearance
+            </p>
+            <button type="button" className={styles.smallLinkBtn} onClick={handleResetAppearance}>
+              Reset
+            </button>
+          </div>
 
           <div className={styles.controlRowInline}>
             <span className={styles.controlInlineLabel}>Radius</span>
@@ -305,7 +435,23 @@ export default function EmbedDesigner({
         </div>
 
         <div className={`${styles.card} ${styles.controlsCard}`}>
-          <p className={styles.cardLabel}>Button style</p>
+          <div className={styles.controlLabelRow} style={{ marginBottom: 4 }}>
+            <p className={styles.cardLabel} style={{ margin: 0 }}>
+              Button style
+            </p>
+            <button
+              type="button"
+              className={styles.smallLinkBtn}
+              onClick={handleResetButtonStyle}
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <span className={styles.label}>Font</span>
+            <FontPicker value={buttonFontFamily} onChange={setButtonFontFamily} />
+          </div>
 
           <div className={styles.controlRowInline}>
             <span className={styles.controlInlineLabel}>Font size</span>
@@ -372,6 +518,19 @@ export default function EmbedDesigner({
               className={styles.slider}
             />
             <span className={styles.controlInlineValue}>{buttonPaddingY}px</span>
+          </div>
+
+          <div className={styles.controlRowInline}>
+            <span className={styles.controlInlineLabel}>Radius</span>
+            <input
+              type="range"
+              min={0}
+              max={30}
+              value={buttonBorderRadius}
+              onChange={(e) => setButtonBorderRadius(Number(e.target.value))}
+              className={styles.slider}
+            />
+            <span className={styles.controlInlineValue}>{buttonBorderRadius}px</span>
           </div>
 
           <div className={styles.controlRowInline}>
