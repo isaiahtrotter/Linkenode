@@ -16,6 +16,7 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
       <circle class="launcher-dot" cx="48" cy="48" r="6" fill="#C2477F"/>
       <circle cx="32" cy="32" r="9" fill="#1D69E0"/>
     </svg>
+    <span id="launcher-icon-emoji" style="display:none;font-size:16px;line-height:1;"></span>
     <span class="launcher-label">View My Network</span>
   </div>
 
@@ -53,8 +54,20 @@ type WidgetOptions = {
   mode?: "floating" | "inline";
   theme?: "light" | "dark";
   cornerRadius?: number;
-  shadow?: boolean;
+  shadow?: number;
+  buttonFontSize?: number;
+  buttonFontWeight?: number;
+  buttonLetterSpacing?: number;
+  buttonPaddingX?: number;
+  buttonPaddingY?: number;
+  buttonBorderColor?: string;
+  buttonBorderWidth?: number;
+  buttonBackgroundColor?: string;
+  buttonHoverStyle?: string;
+  icon?: boolean;
+  iconEmoji?: string;
   appOrigin?: string;
+  disableCallToAction?: boolean;
 };
 
 declare global {
@@ -94,6 +107,10 @@ function NetworkWidget({
           window.__initNetworkWidget?.(widgetData, {
             mode,
             appOrigin: window.location.origin,
+            // This is only ever the dashboard's own live preview, never a
+            // real third-party embed — clicking "Add me"/"Create your
+            // network" shouldn't navigate the page you're editing away.
+            disableCallToAction: true,
           });
           onReady?.();
         };

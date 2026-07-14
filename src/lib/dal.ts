@@ -17,6 +17,8 @@ export const requireSessionUser = cache(async () => {
   return user;
 });
 
+export type ButtonHoverStyle = "scale" | "lift" | "glow" | "darken" | "none";
+
 export type WidgetSettings = {
   theme: "light" | "dark";
   cornerRadius: number;
@@ -24,8 +26,12 @@ export type WidgetSettings = {
   buttonFontSize: number; // px
   buttonFontWeight: number; // 400-700
   buttonLetterSpacing: number; // px
-  buttonPaddingX: number; // px
+  buttonPaddingX: number; // px, applied symmetrically left/right
   buttonPaddingY: number; // px
+  buttonBorderColor: string; // hex
+  buttonBorderWidth: number; // px
+  buttonBackgroundColor: string; // hex
+  buttonHoverStyle: ButtonHoverStyle;
 };
 
 export type Profile = {

@@ -36,11 +36,12 @@ body { margin:0; font-family: -apple-system, sans-serif; }
 
       .launcher {
         position: absolute;
-        padding: var(--wt-btn-padding-y, 14px) var(--wt-btn-padding-x, 16px)
-          var(--wt-btn-padding-y, 14px) 12px;
+        padding: var(--wt-btn-padding-y, 14px) var(--wt-btn-padding-x, 16px);
         border-radius: 14px;
-        background: #faf9f6;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: var(--wt-btn-bg, #faf9f6);
+        border-style: solid;
+        border-width: var(--wt-btn-border-width, 1px);
+        border-color: var(--wt-btn-border-color, rgba(0, 0, 0, 0.1));
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
         display: flex;
         align-items: center;
@@ -57,9 +58,38 @@ body { margin:0; font-family: -apple-system, sans-serif; }
           background-color 0.25s ease;
       }
       .launcher:hover {
-        background: #ffffff;
+        background: color-mix(in srgb, var(--wt-btn-bg, #faf9f6) 30%, white 70%);
         box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
         transform: scale(1.035);
+      }
+      /* Hover style presets -- selected via a class on #widget-root, chosen
+         on the Embed page. "scale" (default) is the unconditional rule
+         above; the rest override it. */
+      #widget-root.hover-lift .launcher:hover {
+        transform: translateY(-3px);
+      }
+      #widget-root.hover-glow .launcher:hover {
+        background: var(--wt-btn-bg, #faf9f6);
+        transform: none;
+        box-shadow:
+          0 0 0 4px rgba(29, 105, 224, 0.22),
+          0 8px 24px rgba(0, 0, 0, 0.16);
+      }
+      #widget-root.hover-darken .launcher:hover {
+        background: color-mix(in srgb, var(--wt-btn-bg, #faf9f6) 88%, black 12%);
+        transform: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      }
+      #widget-root.hover-none .launcher:hover {
+        background: var(--wt-btn-bg, #faf9f6);
+        transform: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      }
+      #widget-root.hover-none .launcher:hover .launcher-label {
+        color: rgba(0, 0, 0, 0.72);
+      }
+      #widget-root.hover-none .launcher:hover .launcher-dot {
+        transform: none;
       }
       .launcher:active {
         transform: scale(0.98);
@@ -85,6 +115,10 @@ body { margin:0; font-family: -apple-system, sans-serif; }
       }
       .launcher:hover .launcher-dot {
         transform: scale(1.22);
+      }
+      #launcher-icon-emoji {
+        font-size: 16px;
+        line-height: 1;
       }
       #widget-root.expanded .launcher {
         opacity: 0;

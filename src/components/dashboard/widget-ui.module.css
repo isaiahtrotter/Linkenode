@@ -825,14 +825,66 @@
   align-items: center;
   gap: 9px;
   border-radius: 14px;
-  background: #faf9f6;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--mimic-bg, #faf9f6);
+  border-style: solid;
+  border-width: var(--mimic-border-width, 1px);
+  border-color: var(--mimic-border-color, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
   white-space: nowrap;
   cursor: default;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.buttonMimic:hover {
+  background: color-mix(in srgb, var(--mimic-bg, #faf9f6) 30%, white 70%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+  transform: scale(1.035);
+}
+
+.buttonMimic.hoverLift:hover {
+  transform: translateY(-3px);
+}
+
+.buttonMimic.hoverGlow:hover {
+  background: var(--mimic-bg, #faf9f6);
+  transform: none;
+  box-shadow: 0 0 0 4px rgba(29, 105, 224, 0.22), 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.buttonMimic.hoverDarken:hover {
+  background: color-mix(in srgb, var(--mimic-bg, #faf9f6) 88%, black 12%);
+  transform: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.buttonMimic.hoverNone:hover {
+  background: var(--mimic-bg, #faf9f6);
+  transform: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
 .buttonMimicLabel {
   color: rgba(0, 0, 0, 0.72);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
     sans-serif;
+}
+
+.colorInput {
+  width: 44px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.13);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hoverStyleRow {
+  display: flex;
+  gap: 2px;
+  background: #f2f2f3;
+  padding: 3px;
+  border-radius: 10px;
+  flex-wrap: wrap;
 }

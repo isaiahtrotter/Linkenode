@@ -15,6 +15,10 @@
         var btnLetterSpacing = options.buttonLetterSpacing != null ? options.buttonLetterSpacing : (settings.buttonLetterSpacing != null ? settings.buttonLetterSpacing : 0);
         var btnPaddingX = options.buttonPaddingX != null ? options.buttonPaddingX : (settings.buttonPaddingX != null ? settings.buttonPaddingX : 16);
         var btnPaddingY = options.buttonPaddingY != null ? options.buttonPaddingY : (settings.buttonPaddingY != null ? settings.buttonPaddingY : 14);
+        var btnBorderColor = options.buttonBorderColor || settings.buttonBorderColor || "rgba(0,0,0,0.1)";
+        var btnBorderWidth = options.buttonBorderWidth != null ? options.buttonBorderWidth : (settings.buttonBorderWidth != null ? settings.buttonBorderWidth : 1);
+        var btnBg = options.buttonBackgroundColor || settings.buttonBackgroundColor || "#faf9f6";
+        var btnHoverStyle = options.buttonHoverStyle || settings.buttonHoverStyle || "scale";
 
         var svg = d3.select("#graph-svg");
         var container = document.getElementById("ring-app");
@@ -44,6 +48,16 @@
         widgetRoot.style.setProperty("--wt-btn-letter-spacing", btnLetterSpacing + "px");
         widgetRoot.style.setProperty("--wt-btn-padding-x", btnPaddingX + "px");
         widgetRoot.style.setProperty("--wt-btn-padding-y", btnPaddingY + "px");
+        widgetRoot.style.setProperty("--wt-btn-border-color", btnBorderColor);
+        widgetRoot.style.setProperty("--wt-btn-border-width", btnBorderWidth + "px");
+        widgetRoot.style.setProperty("--wt-btn-bg", btnBg);
+
+        ["hover-lift", "hover-glow", "hover-darken", "hover-none"].forEach(function (c) {
+          widgetRoot.classList.remove(c);
+        });
+        if (btnHoverStyle !== "scale") {
+          widgetRoot.classList.add("hover-" + btnHoverStyle);
+        }
 
         if (mode === "floating") {
           var corner = options.corner || settings.corner || "bottom-right";
@@ -67,16 +81,38 @@
 
         var showIcon =
           options.icon != null ? options.icon : settings.icon != null ? settings.icon : true;
-        var launcherIconEl = launcherBtn.querySelector("svg");
-        if (launcherIconEl) launcherIconEl.style.display = showIcon ? "" : "none";
+        var iconEmoji = options.iconEmoji || settings.iconEmoji || "";
+        var launcherIconSvgEl = launcherBtn.querySelector("svg");
+        var launcherIconEmojiEl = document.getElementById("launcher-icon-emoji");
+        if (!showIcon) {
+          if (launcherIconSvgEl) launcherIconSvgEl.style.display = "none";
+          if (launcherIconEmojiEl) launcherIconEmojiEl.style.display = "none";
+        } else if (iconEmoji) {
+          if (launcherIconSvgEl) launcherIconSvgEl.style.display = "none";
+          if (launcherIconEmojiEl) {
+            launcherIconEmojiEl.textContent = iconEmoji;
+            launcherIconEmojiEl.style.display = "";
+          }
+        } else {
+          if (launcherIconSvgEl) launcherIconSvgEl.style.display = "";
+          if (launcherIconEmojiEl) launcherIconEmojiEl.style.display = "none";
+        }
 
-        // Both "Add me" and "Create your network" send visitors to sign up
-        // / log in on the app itself, not a dead "#" link.
+        // In the dashboard's own live preview these should just be inert —
+        // clicking them shouldn't navigate the settings page you're editing
+        // away to the login screen. Real third-party embeds (via
+        // public/widget.js) always pass disableCallToAction: false.
+        var disableCallToAction = !!options.disableCallToAction;
         var loginUrl = (options.appOrigin || "") + "/";
         var addOwnerBtnEl = document.getElementById("add-owner-btn");
-        if (addOwnerBtnEl) addOwnerBtnEl.href = loginUrl;
         var shareNetworkBtnEl = document.getElementById("share-network-btn");
-        if (shareNetworkBtnEl) shareNetworkBtnEl.href = loginUrl;
+        if (disableCallToAction) {
+          if (addOwnerBtnEl) addOwnerBtnEl.addEventListener("click", function (e) { e.preventDefault(); });
+          if (shareNetworkBtnEl) shareNetworkBtnEl.addEventListener("click", function (e) { e.preventDefault(); });
+        } else {
+          if (addOwnerBtnEl) addOwnerBtnEl.href = loginUrl;
+          if (shareNetworkBtnEl) shareNetworkBtnEl.href = loginUrl;
+        }
 
         var width = container.clientWidth || 460,
           height = container.clientHeight || 560;

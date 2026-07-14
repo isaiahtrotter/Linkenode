@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import NetworkWidget from "@/components/NetworkWidget";
 import { updateWidgetSettings } from "@/app/dashboard/actions";
-import type { WidgetSettings } from "@/lib/dal";
+import type { ButtonHoverStyle, WidgetSettings } from "@/lib/dal";
 import styles from "./widget-ui.module.css";
 
 const MAX_CORNER_RADIUS = 30;
@@ -18,6 +19,26 @@ const DEFAULT_SETTINGS: WidgetSettings = {
   buttonLetterSpacing: 0,
   buttonPaddingX: 16,
   buttonPaddingY: 14,
+  buttonBorderColor: "#e0ded8",
+  buttonBorderWidth: 1,
+  buttonBackgroundColor: "#faf9f6",
+  buttonHoverStyle: "scale",
+};
+
+const HOVER_STYLES: { value: ButtonHoverStyle; label: string }[] = [
+  { value: "scale", label: "Scale" },
+  { value: "lift", label: "Lift" },
+  { value: "glow", label: "Glow" },
+  { value: "darken", label: "Darken" },
+  { value: "none", label: "None" },
+];
+
+const HOVER_STYLE_CLASS: Record<ButtonHoverStyle, string | undefined> = {
+  scale: undefined,
+  lift: "hoverLift",
+  glow: "hoverGlow",
+  darken: "hoverDarken",
+  none: "hoverNone",
 };
 
 type EmbedType = "floating" | "inline";
@@ -70,9 +91,9 @@ export default function EmbedDesigner({
   initialSettings: WidgetSettings | null;
 }) {
   // Merge field-by-field rather than initialSettings ?? DEFAULT_SETTINGS —
-  // existing profiles saved their widget_settings under the old schema
-  // (boolean shadow, no button-style fields at all), so an all-or-nothing
-  // fallback leaves those new fields undefined and crashes the sliders below.
+  // existing profiles saved their widget_settings under an older schema
+  // (missing newer fields entirely), so an all-or-nothing fallback leaves
+  // those fields undefined and crashes the controls below.
   const settings: WidgetSettings = { ...DEFAULT_SETTINGS, ...initialSettings };
   // shadow itself used to be a boolean; coerce old saved values to the new
   // 0-100 scale (mirrors the same coercion in the widget engine).
@@ -92,6 +113,12 @@ export default function EmbedDesigner({
   const [buttonLetterSpacing, setButtonLetterSpacing] = useState(settings.buttonLetterSpacing);
   const [buttonPaddingX, setButtonPaddingX] = useState(settings.buttonPaddingX);
   const [buttonPaddingY, setButtonPaddingY] = useState(settings.buttonPaddingY);
+  const [buttonBorderColor, setButtonBorderColor] = useState(settings.buttonBorderColor);
+  const [buttonBorderWidth, setButtonBorderWidth] = useState(settings.buttonBorderWidth);
+  const [buttonBackgroundColor, setButtonBackgroundColor] = useState(
+    settings.buttonBackgroundColor,
+  );
+  const [buttonHoverStyle, setButtonHoverStyle] = useState(settings.buttonHoverStyle);
   const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -99,6 +126,7 @@ export default function EmbedDesigner({
   const [corner, setCorner] = useState<Corner>("bottom-right");
   const [label, setLabel] = useState(DEFAULT_LABEL);
   const [showIcon, setShowIcon] = useState(true);
+  const [iconEmoji, setIconEmoji] = useState("");
   const [fillContainer, setFillContainer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -143,6 +171,10 @@ export default function EmbedDesigner({
       buttonLetterSpacing,
       buttonPaddingX,
       buttonPaddingY,
+      buttonBorderColor,
+      buttonBorderWidth,
+      buttonBackgroundColor,
+      buttonHoverStyle,
     }).catch((err) => {
       setSaveState("error");
       setSaveError(err instanceof Error ? err.message : "Couldn't save appearance.");
@@ -158,7 +190,11 @@ export default function EmbedDesigner({
     if (trimmedLabel && trimmedLabel !== DEFAULT_LABEL) {
       attrs.push(`data-label="${escapeAttr(trimmedLabel)}"`);
     }
-    if (!showIcon) attrs.push('data-icon="false"');
+    if (!showIcon) {
+      attrs.push('data-icon="false"');
+    } else if (iconEmoji.trim()) {
+      attrs.push(`data-icon-emoji="${escapeAttr(iconEmoji.trim())}"`);
+    }
   }
   const scriptTag = `<script src="${origin}/widget.js" ${attrs.join(" ")} async></script>`;
   const snippet =
@@ -174,6 +210,17 @@ export default function EmbedDesigner({
     setTimeout(() => setCopied(false), 1500);
   }
 
+  const mimicStyle: CSSProperties & Record<string, string | number> = {
+    paddingTop: buttonPaddingY,
+    paddingBottom: buttonPaddingY,
+    paddingLeft: buttonPaddingX,
+    paddingRight: buttonPaddingX,
+    "--mimic-bg": buttonBackgroundColor,
+    "--mimic-border-color": buttonBorderColor,
+    "--mimic-border-width": `${buttonBorderWidth}px`,
+  };
+  const hoverClass = HOVER_STYLE_CLASS[buttonHoverStyle];
+
   return (
     <div className={styles.page}>
       <div className={styles.sideCol}>
@@ -183,15 +230,15 @@ export default function EmbedDesigner({
 
         <div className={styles.buttonPreviewWrap}>
           <div
-            className={styles.buttonMimic}
-            style={{
-              paddingTop: buttonPaddingY,
-              paddingBottom: buttonPaddingY,
-              paddingLeft: 12,
-              paddingRight: buttonPaddingX,
-            }}
+            className={`${styles.buttonMimic} ${hoverClass ? styles[hoverClass] : ""}`}
+            style={mimicStyle}
           >
-            {showIcon && <LauncherIcon />}
+            {showIcon &&
+              (iconEmoji.trim() ? (
+                <span style={{ fontSize: 18, lineHeight: 1 }}>{iconEmoji.trim()}</span>
+              ) : (
+                <LauncherIcon />
+              ))}
             <span
               className={styles.buttonMimicLabel}
               style={{
@@ -327,6 +374,54 @@ export default function EmbedDesigner({
             <span className={styles.controlInlineValue}>{buttonPaddingY}px</span>
           </div>
 
+          <div className={styles.controlRowInline}>
+            <span className={styles.controlInlineLabel}>Background</span>
+            <input
+              type="color"
+              value={buttonBackgroundColor}
+              onChange={(e) => setButtonBackgroundColor(e.target.value)}
+              className={styles.colorInput}
+            />
+            <span className={styles.controlInlineLabel} style={{ marginLeft: 8 }}>
+              Border
+            </span>
+            <input
+              type="color"
+              value={buttonBorderColor}
+              onChange={(e) => setButtonBorderColor(e.target.value)}
+              className={styles.colorInput}
+            />
+          </div>
+
+          <div className={styles.controlRowInline}>
+            <span className={styles.controlInlineLabel}>Border width</span>
+            <input
+              type="range"
+              min={0}
+              max={4}
+              value={buttonBorderWidth}
+              onChange={(e) => setButtonBorderWidth(Number(e.target.value))}
+              className={styles.slider}
+            />
+            <span className={styles.controlInlineValue}>{buttonBorderWidth}px</span>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <span className={styles.label}>Hover effect</span>
+            <div className={styles.hoverStyleRow}>
+              {HOVER_STYLES.map((h) => (
+                <button
+                  key={h.value}
+                  type="button"
+                  className={`${styles.modeOption} ${buttonHoverStyle === h.value ? styles.modeOptionActive : ""}`}
+                  onClick={() => setButtonHoverStyle(h.value)}
+                >
+                  {h.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button type="button" onClick={handleSave} className={styles.btnPrimary}>
             {saveState === "saved"
               ? "Saved!"
@@ -382,44 +477,58 @@ export default function EmbedDesigner({
               </div>
             </>
           ) : (
-            <div className={styles.fieldRowGroup}>
-              <div className={styles.fieldRow} style={{ flex: "0 0 120px" }}>
-                <span className={styles.label}>Corner</span>
-                <select
-                  value={corner}
-                  onChange={(e) => setCorner(e.target.value as Corner)}
-                  className={styles.input}
-                >
-                  {CORNERS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+            <>
+              <div className={styles.fieldRowGroup}>
+                <div className={styles.fieldRow} style={{ flex: "0 0 120px" }}>
+                  <span className={styles.label}>Corner</span>
+                  <select
+                    value={corner}
+                    onChange={(e) => setCorner(e.target.value as Corner)}
+                    className={styles.input}
+                  >
+                    {CORNERS.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.fieldRow}>
+                  <span className={styles.label}>Button text</span>
+                  <input
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                    placeholder={DEFAULT_LABEL}
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.fieldRow} style={{ flex: "0 0 auto", alignItems: "center" }}>
+                  <span className={styles.label}>Icon</span>
+                  <button
+                    type="button"
+                    className={`${styles.switch} ${showIcon ? styles.switchOn : ""}`}
+                    onClick={() => setShowIcon((v) => !v)}
+                    aria-label="Toggle icon"
+                  >
+                    <span className={styles.switchKnob} />
+                  </button>
+                </div>
               </div>
 
-              <div className={styles.fieldRow}>
-                <span className={styles.label}>Button text</span>
-                <input
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder={DEFAULT_LABEL}
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.fieldRow} style={{ flex: "0 0 auto", alignItems: "center" }}>
-                <span className={styles.label}>Icon</span>
-                <button
-                  type="button"
-                  className={`${styles.switch} ${showIcon ? styles.switchOn : ""}`}
-                  onClick={() => setShowIcon((v) => !v)}
-                  aria-label="Toggle icon"
-                >
-                  <span className={styles.switchKnob} />
-                </button>
-              </div>
-            </div>
+              {showIcon && (
+                <div className={styles.fieldRow}>
+                  <span className={styles.label}>Custom icon (optional)</span>
+                  <input
+                    value={iconEmoji}
+                    onChange={(e) => setIconEmoji(e.target.value)}
+                    placeholder="Paste any emoji, e.g. 👋 — leave blank for the default"
+                    className={styles.input}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <pre className={styles.snippet}>{snippet}</pre>
