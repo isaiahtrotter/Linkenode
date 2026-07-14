@@ -154,8 +154,12 @@ export default function ConnectionsSection({
               <div className={styles.searchDropdownItem}>No matches.</div>
             )}
             {!isSearching &&
-              results.map((r) => (
-                <div key={r.id} className={styles.searchDropdownItem}>
+              results.map((r, index) => (
+                <div
+                  key={r.id}
+                  className={styles.searchDropdownItem}
+                  style={{ animationDelay: `${Math.min(index, 6) * 25}ms` }}
+                >
                   <span className={styles.searchDropdownIdentity}>
                     <MiniAvatar url={r.avatar_url} name={r.name} />
                     <span>{r.name}</span>
@@ -171,12 +175,16 @@ export default function ConnectionsSection({
                     </button>
                   )}
                   {r.status === "pending_outgoing" && (
-                    <span className={styles.badge}>Pending</span>
+                    <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
                   )}
                   {r.status === "pending_incoming" && (
-                    <span className={styles.badge}>Wants to connect</span>
+                    <span className={`${styles.badge} ${styles.badgeIncoming}`}>
+                      Wants to connect
+                    </span>
                   )}
-                  {r.status === "connected" && <span className={styles.badge}>Connected</span>}
+                  {r.status === "connected" && (
+                    <span className={`${styles.badge} ${styles.badgeConnected}`}>Connected</span>
+                  )}
                 </div>
               ))}
           </div>
@@ -232,7 +240,7 @@ export default function ConnectionsSection({
                   <span>{other?.name ?? "Unknown"}</span>
                 </span>
                 <div className={styles.rowActions}>
-                  <span className={styles.badge}>Pending</span>
+                  <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
                   <button
                     type="button"
                     className={styles.smallLinkBtn}

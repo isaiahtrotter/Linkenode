@@ -55,12 +55,16 @@ export default function NetworkDirectory({
                 </button>
               )}
               {p.status === "pending_outgoing" && (
-                <span className={styles.badge}>Pending</span>
+                <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
               )}
               {p.status === "pending_incoming" && (
-                <span className={styles.badge}>Wants to connect</span>
+                <span className={`${styles.badge} ${styles.badgeIncoming}`}>
+                  Wants to connect
+                </span>
               )}
-              {p.status === "connected" && <span className={styles.badge}>Connected</span>}
+              {p.status === "connected" && (
+                <span className={`${styles.badge} ${styles.badgeConnected}`}>Connected</span>
+              )}
             </div>
           ))}
         </div>
