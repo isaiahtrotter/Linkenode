@@ -30,7 +30,6 @@ export type Profile = {
   bio: string | null;
   website: string | null;
   avatar_url: string | null;
-  banner_url: string | null;
   embed_key: string;
   widget_settings: WidgetSettings | null;
 };

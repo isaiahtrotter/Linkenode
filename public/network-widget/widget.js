@@ -108,7 +108,6 @@
           bio: profile.bio,
           website: profile.website,
           avatarOverride: profile.avatar_url || null,
-          bannerUrl: profile.banner_url || null,
           workSamples: profile.workSamples || [],
         };
 
@@ -122,7 +121,6 @@
             endorsement: c.endorsement || null,
             relationship: c.relationship || null,
             avatarOverride: c.avatar_url || null,
-            bannerUrl: c.banner_url || null,
             workSamples: c.workSamples || [],
           };
         });

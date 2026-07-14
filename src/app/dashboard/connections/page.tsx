@@ -1,5 +1,6 @@
 import { getOwnConnectionsData, getNetworkDirectory } from "@/lib/dal";
 import ConnectionsSection from "@/components/dashboard/ConnectionsSection";
+import YourNetworkSection from "@/components/dashboard/YourNetworkSection";
 import NetworkDirectory from "@/components/dashboard/NetworkDirectory";
 import styles from "@/components/dashboard/widget-ui.module.css";
 
@@ -10,13 +11,18 @@ export default async function ConnectionsPage() {
   ]);
 
   return (
-    <div className={styles.connectionsPage}>
-      <ConnectionsSection
-        incoming={connections.incoming}
-        outgoing={connections.outgoing}
-        accepted={connections.accepted}
-      />
-      <NetworkDirectory initialDirectory={directory} />
+    <div className={styles.page}>
+      <div className={styles.mainCol}>
+        <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
+      </div>
+
+      <div className={styles.mainCol}>
+        <YourNetworkSection accepted={connections.accepted} />
+      </div>
+
+      <div className={styles.mainCol}>
+        <NetworkDirectory initialDirectory={directory} />
+      </div>
     </div>
   );
 }

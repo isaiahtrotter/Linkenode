@@ -1,9 +1,6 @@
 export const AVATAR_MAX_BYTES = 1 * 1024 * 1024;
 export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const BANNER_MAX_BYTES = 3 * 1024 * 1024;
-export const BANNER_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
 export const WORK_SAMPLE_MAX_BYTES = 5 * 1024 * 1024;
 export const WORK_SAMPLE_ALLOWED_TYPES = [
   "image/jpeg",

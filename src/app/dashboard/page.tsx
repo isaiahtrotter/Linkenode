@@ -15,6 +15,9 @@ export default async function DashboardPage() {
     <div className={styles.page}>
       <div className={styles.mainCol}>
         <ProfileSection profile={profile} />
+      </div>
+
+      <div className={styles.mainCol}>
         <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
         <EmbedSection embedKey={profile.embed_key} />
       </div>

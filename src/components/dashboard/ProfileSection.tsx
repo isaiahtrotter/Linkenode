@@ -5,7 +5,6 @@ import type { Profile } from "@/lib/dal";
 import { updateProfile } from "@/app/dashboard/profile/actions";
 import { updateOwnerPreview } from "@/lib/widgetLiveUpdate";
 import AvatarUpload from "./AvatarUpload";
-import BannerUpload from "./BannerUpload";
 import styles from "./widget-ui.module.css";
 
 const BIO_MAX_LENGTH = 80;
@@ -20,7 +19,6 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
     <div className={styles.card}>
       <p className={styles.cardLabel}>Your profile</p>
 
-      <BannerUpload profileId={profile.id} currentUrl={profile.banner_url} />
       <AvatarUpload profileId={profile.id} currentUrl={profile.avatar_url} />
 
       <form action={formAction}>

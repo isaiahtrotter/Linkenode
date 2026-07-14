@@ -7,25 +7,16 @@ import {
   sendConnectionRequest,
   cancelConnectionRequest,
   respondToRequest,
-  saveConnectionNote,
-  saveEndorsement,
   type SearchResult,
 } from "@/app/dashboard/connections/actions";
 import styles from "./widget-ui.module.css";
 
 type OtherProfile = { id: string; name: string; avatar_url: string | null } | undefined;
 type RequestRow = { request: { id: string }; other: OtherProfile };
-type AcceptedRow = {
-  request: { id: string };
-  other: OtherProfile;
-  note: string;
-  endorsement: string;
-};
 
 const SEARCH_DEBOUNCE_MS = 200;
-const NOTE_MAX_LENGTH = 80;
 
-function MiniAvatar({ url, name }: { url: string | null | undefined; name: string }) {
+export function MiniAvatar({ url, name }: { url: string | null | undefined; name: string }) {
   return (
     <span
       className={styles.miniAvatar}
@@ -39,16 +30,13 @@ function MiniAvatar({ url, name }: { url: string | null | undefined; name: strin
 export default function ConnectionsSection({
   incoming,
   outgoing,
-  accepted,
 }: {
   incoming: RequestRow[];
   outgoing: RequestRow[];
-  accepted: AcceptedRow[];
 }) {
   const router = useRouter();
   const [incomingState, setIncomingState] = useState(incoming);
   const [outgoingState, setOutgoingState] = useState(outgoing);
-  const [acceptedState, setAcceptedState] = useState(accepted);
   const [actionError, setActionError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -60,7 +48,6 @@ export default function ConnectionsSection({
 
   useEffect(() => setIncomingState(incoming), [incoming]);
   useEffect(() => setOutgoingState(outgoing), [outgoing]);
-  useEffect(() => setAcceptedState(accepted), [accepted]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -101,14 +88,7 @@ export default function ConnectionsSection({
   }
 
   function handleAccept(requestId: string) {
-    const item = incomingState.find((i) => i.request.id === requestId);
     setIncomingState((prev) => prev.filter((i) => i.request.id !== requestId));
-    if (item) {
-      setAcceptedState((prev) => [
-        ...prev,
-        { request: item.request, other: item.other, note: "", endorsement: "" },
-      ]);
-    }
     respondToRequest(requestId, true).catch((err) => {
       setActionError(err instanceof Error ? err.message : "Couldn't accept request.");
       router.refresh();
@@ -255,53 +235,9 @@ export default function ConnectionsSection({
         </>
       )}
 
-      <p className={styles.cardLabel} style={{ marginTop: 20 }}>
-        Your network
-      </p>
-      <ul className={styles.list}>
-        {acceptedState.map(({ request, other, note, endorsement }) => (
-          <li key={request.id} className={styles.connectionCard}>
-            <span className={styles.searchDropdownIdentity}>
-              <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
-              <span className={styles.connectionName}>{other?.name ?? "Unknown"}</span>
-            </span>
-            <form action={saveConnectionNote} className={styles.noteForm}>
-              <input type="hidden" name="requestId" value={request.id} />
-              <input
-                name="note"
-                defaultValue={note}
-                maxLength={NOTE_MAX_LENGTH}
-                placeholder="How do you know them? (private)"
-                className={styles.input}
-              />
-              <button type="submit" className={styles.smallLinkBtn}>
-                Save
-              </button>
-            </form>
-            {other && (
-              <form
-                action={async (formData) => {
-                  await saveEndorsement(other.id, (formData.get("endorsement") as string) ?? "");
-                }}
-                className={styles.noteForm}
-              >
-                <input
-                  name="endorsement"
-                  defaultValue={endorsement}
-                  placeholder="Write a public recommendation…"
-                  className={styles.input}
-                />
-                <button type="submit" className={styles.smallLinkBtn}>
-                  Save
-                </button>
-              </form>
-            )}
-          </li>
-        ))}
-        {acceptedState.length === 0 && (
-          <li className={styles.emptyState}>No connections yet.</li>
-        )}
-      </ul>
+      {incomingState.length === 0 && outgoingState.length === 0 && (
+        <p className={styles.emptyState}>No pending requests.</p>
+      )}
     </div>
   );
 }
