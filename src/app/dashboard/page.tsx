@@ -4,9 +4,9 @@ import {
   getOwnConnectionsData,
   getNetworkDirectory,
 } from "@/lib/dal";
-import DashboardCanvas from "@/components/dashboard/DashboardCanvas";
+import DashboardPage from "@/components/dashboard/DashboardPage";
 
-export default async function DashboardPage() {
+export default async function Page() {
   const profile = await getOwnProfile();
   if (!profile) return null;
 
@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <DashboardCanvas
+    <DashboardPage
       profile={profile}
       workSamples={workSamples}
       connections={connections}

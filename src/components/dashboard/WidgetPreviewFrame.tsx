@@ -6,7 +6,7 @@ import NetworkWidget from "@/components/NetworkWidget";
 import type { ButtonHoverStyle } from "@/lib/dal";
 import { FONT_BY_ID, FONT_OPTIONS, HOVER_STYLE_CLASS, LauncherIcon } from "./widgetStyleShared";
 import styles from "./widget-ui.module.css";
-import canvasStyles from "./canvas.module.css";
+import pageStyles from "./dashboard-page.module.css";
 
 const DEFAULT_LABEL = "View My Network";
 
@@ -45,7 +45,6 @@ export type ButtonStyleValues = {
 export default function WidgetPreviewFrame({
   embedKey,
   containerRef,
-  interactive,
   selectedFrame,
   onSelectInline,
   onSelectButton,
@@ -53,7 +52,6 @@ export default function WidgetPreviewFrame({
 }: {
   embedKey: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  interactive: boolean;
   selectedFrame: "button" | "inline" | null;
   onSelectInline: () => void;
   onSelectButton: () => void;
@@ -126,58 +124,54 @@ export default function WidgetPreviewFrame({
   const selectedFont = FONT_BY_ID.get(buttonFontFamily) ?? FONT_OPTIONS[0];
 
   return (
-    <div className={styles.page}>
-      <div className={styles.sideCol}>
-        <div
-          data-select-trigger="inline"
-          onClick={onSelectInline}
-          className={`${canvasStyles.selectableWrap} ${selectedFrame === "inline" ? canvasStyles.selectableWrapActive : ""}`}
-          style={{ position: "relative" }}
-        >
-          <div className={styles.previewCard} ref={containerRef} data-canvas-passthrough>
-            <NetworkWidget embedKey={embedKey} mode="inline" />
-          </div>
-          {/* Physically blocks pointer events from reaching the widget when
-              not focused, rather than toggling pointer-events on an
-              ancestor — the widget's own CSS (mode-inline .panel-expanded)
-              unconditionally sets pointer-events: auto on itself, which a
-              descendant can always do regardless of an ancestor's "none". */}
-          {!interactive && <div className={canvasStyles.previewOverlay} aria-hidden="true" />}
-        </div>
-
-        <div
-          data-select-trigger="button"
-          onClick={onSelectButton}
-          className={`${styles.buttonPreviewWrap} ${canvasStyles.selectableWrap} ${selectedFrame === "button" ? canvasStyles.selectableWrapActive : ""}`}
-        >
-          <div
-            className={`${styles.buttonMimic} ${hoverClass ? styles[hoverClass] : ""}`}
-            style={mimicStyle}
-          >
-            {showIcon &&
-              (iconEmoji.trim() ? (
-                <span style={{ fontSize: 18, lineHeight: 1 }}>{iconEmoji.trim()}</span>
-              ) : (
-                <LauncherIcon />
-              ))}
-            <span
-              className={styles.buttonMimicLabel}
-              style={{
-                fontFamily: selectedFont.family,
-                fontSize: buttonFontSize,
-                fontWeight: buttonFontWeight,
-                letterSpacing: buttonLetterSpacing,
-              }}
-            >
-              {label.trim() || DEFAULT_LABEL}
-            </span>
-          </div>
+    <div className={styles.mainCol}>
+      <div
+        data-select-trigger="inline"
+        onClickCapture={onSelectInline}
+        className={`${pageStyles.selectableWrap} ${selectedFrame === "inline" ? pageStyles.selectableWrapActive : ""}`}
+      >
+        {/* Capture phase, not bubble — the live D3 graph's own node-click
+            handler calls stopPropagation() (it's meant to stop a real
+            third-party embed's clicks from leaking into the host page),
+            which would otherwise silently swallow a bubble-phase onClick
+            here before it ever fires. Capture runs on the way down, before
+            that stopPropagation happens on the way back up. */}
+        <div className={styles.previewCard} ref={containerRef}>
+          <NetworkWidget embedKey={embedKey} mode="inline" />
         </div>
       </div>
 
-      <div className={styles.mainCol}>
-        <div className={styles.card}>
-          <p className={styles.cardLabel}>Embed on your site</p>
+      <div
+        data-select-trigger="button"
+        onClickCapture={onSelectButton}
+        className={`${styles.buttonPreviewWrap} ${pageStyles.selectableWrap} ${selectedFrame === "button" ? pageStyles.selectableWrapActive : ""}`}
+      >
+        <div
+          className={`${styles.buttonMimic} ${hoverClass ? styles[hoverClass] : ""}`}
+          style={mimicStyle}
+        >
+          {showIcon &&
+            (iconEmoji.trim() ? (
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{iconEmoji.trim()}</span>
+            ) : (
+              <LauncherIcon />
+            ))}
+          <span
+            className={styles.buttonMimicLabel}
+            style={{
+              fontFamily: selectedFont.family,
+              fontSize: buttonFontSize,
+              fontWeight: buttonFontWeight,
+              letterSpacing: buttonLetterSpacing,
+            }}
+          >
+            {label.trim() || DEFAULT_LABEL}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.card}>
+        <p className={styles.cardLabel}>Embed on your site</p>
 
           <div className={styles.modeToggle}>
             <button
@@ -275,7 +269,6 @@ export default function WidgetPreviewFrame({
           <button onClick={copy} className={styles.btnPrimary}>
             {copied ? "Copied!" : "Copy to clipboard"}
           </button>
-        </div>
       </div>
     </div>
   );

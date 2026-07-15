@@ -2,17 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { updateWidgetSettings } from "@/app/dashboard/actions";
-import type {
-  DirectoryEntry,
-  Profile,
-  WidgetSettings,
-  WorkSample,
-} from "@/lib/dal";
-import { useCanvasTransform, type CanvasFrame } from "@/lib/dashboard/useCanvasTransform";
+import { signOut, updateWidgetSettings } from "@/app/dashboard/actions";
+import type { DirectoryEntry, Profile, WidgetSettings, WorkSample } from "@/lib/dal";
 import { DEFAULT_SETTINGS, MAX_CORNER_RADIUS, shadowCss } from "./widgetStyleShared";
-import Frame from "./Frame";
-import CanvasNav from "./CanvasNav";
 import InspectorPanel from "./InspectorPanel";
 import WidgetPreviewFrame from "./WidgetPreviewFrame";
 import ProfileSection from "./ProfileSection";
@@ -20,16 +12,8 @@ import WorkSamplesSection from "./WorkSamplesSection";
 import ConnectionsSection from "./ConnectionsSection";
 import NetworkDirectory from "./NetworkDirectory";
 import YourNetworkSection from "./YourNetworkSection";
-import styles from "./canvas.module.css";
+import styles from "./dashboard-page.module.css";
 import widgetUiStyles from "./widget-ui.module.css";
-
-const INSPECTOR_PANEL_WIDTH = 356;
-
-const FRAMES: CanvasFrame[] = [
-  { id: "profile", x: 0, y: 0, width: 820, height: 950, label: "Profile" },
-  { id: "connections", x: 900, y: 0, width: 1300, height: 900, label: "Connections" },
-  { id: "widget-preview", x: 0, y: 1030, width: 1300, height: 760, label: "Widget" },
-];
 
 type SelectedFrame = "button" | "inline" | null;
 
@@ -42,7 +26,7 @@ type ConnectionsData = {
   accepted: YourNetworkSectionProps["accepted"];
 };
 
-export default function DashboardCanvas({
+export default function DashboardPage({
   profile,
   workSamples,
   connections,
@@ -88,9 +72,6 @@ export default function DashboardCanvas({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const [selectedFrame, setSelectedFrame] = useState<SelectedFrame>(null);
-
-  const { viewportRef, transform, dragging, panToFrame, zoomToFit, bind } =
-    useCanvasTransform(FRAMES);
 
   function getWidgetRoot(): HTMLElement | null {
     return containerRef.current?.querySelector("#widget-root") ?? null;
@@ -163,25 +144,9 @@ export default function DashboardCanvas({
     });
   }
 
-  const selectInline = useCallback(() => {
-    setSelectedFrame("inline");
-    panToFrame("widget-preview", { scale: 1, rightInset: INSPECTOR_PANEL_WIDTH });
-  }, [panToFrame]);
-
-  const selectButton = useCallback(() => {
-    setSelectedFrame("button");
-    panToFrame("widget-preview", { scale: 1, rightInset: INSPECTOR_PANEL_WIDTH });
-  }, [panToFrame]);
-
+  const selectInline = useCallback(() => setSelectedFrame("inline"), []);
+  const selectButton = useCallback(() => setSelectedFrame("button"), []);
   const closeInspector = useCallback(() => setSelectedFrame(null), []);
-
-  // The two raw-pixel-math paths inside the widget engine (the dot
-  // highlight overlay and the panel resize handle) only stay correct when
-  // the ancestor canvas transform is exactly 1:1 — see plan notes. Gating
-  // interactivity on the *actual* settled scale (not just "this frame was
-  // selected") means it's automatically correct through the pan/zoom
-  // animation and if the user zooms away again afterwards.
-  const interactive = selectedFrame === "inline" && Math.abs(transform.scale - 1) < 0.01;
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -192,9 +157,8 @@ export default function DashboardCanvas({
   }, []);
 
   // Clicking anything that isn't a preview's own select-trigger and isn't
-  // inside the inspector panel itself clears the selection — this covers
-  // both truly-empty canvas and empty whitespace within an unrelated frame.
-  const handleCanvasClick = useCallback((e: ReactMouseEvent) => {
+  // inside the inspector panel itself clears the selection.
+  const handlePageClick = useCallback((e: ReactMouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest("[data-inspector-panel]")) return;
     if (target.closest("[data-select-trigger]")) return;
@@ -202,48 +166,46 @@ export default function DashboardCanvas({
   }, []);
 
   return (
-    <div
-      className={styles.canvasViewport}
-      ref={viewportRef}
-      data-dragging={dragging ? "true" : "false"}
-      onPointerDown={bind.onPointerDown}
-      onPointerMove={bind.onPointerMove}
-      onPointerUp={bind.onPointerUp}
-      onPointerCancel={bind.onPointerUp}
-      onClick={handleCanvasClick}
-    >
-      <CanvasNav onNavigate={(id) => panToFrame(id, { scale: 1 })} onFitView={zoomToFit} />
+    <div className={styles.pageShell}>
+      <header className={styles.header}>
+        <div className={styles.headerBrand}>
+          <span className={styles.brandIcon}>W</span>
+          <span className={styles.brandText}>Worked Together</span>
+        </div>
+        <form action={signOut}>
+          <button type="submit" className={styles.signOutBtn} aria-label="Sign out">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </form>
+      </header>
 
-      <div
-        className={styles.canvasLayer}
-        style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})` }}
-      >
-        <Frame frame={FRAMES[0]}>
+      <main className={styles.main} onClick={handlePageClick}>
+        <section className={styles.section}>
+          <p className={styles.sectionTitle}>Profile</p>
           <div className={widgetUiStyles.mainCol}>
             <ProfileSection profile={profile} />
             <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
           </div>
-        </Frame>
+        </section>
 
-        <Frame frame={FRAMES[1]}>
-          <div className={widgetUiStyles.page}>
-            <div className={widgetUiStyles.mainCol}>
-              <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
-            </div>
-            <div className={widgetUiStyles.mainCol}>
-              <NetworkDirectory initialDirectory={directory} />
-            </div>
-            <div className={`${widgetUiStyles.mainCol} ${widgetUiStyles.fullSpan}`}>
-              <YourNetworkSection accepted={connections.accepted} />
-            </div>
+        <section className={styles.section}>
+          <p className={styles.sectionTitle}>Connections</p>
+          <div className={widgetUiStyles.mainCol}>
+            <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
+            <NetworkDirectory initialDirectory={directory} />
+            <YourNetworkSection accepted={connections.accepted} />
           </div>
-        </Frame>
+        </section>
 
-        <Frame frame={FRAMES[2]}>
+        <section className={styles.section}>
+          <p className={styles.sectionTitle}>Embed</p>
           <WidgetPreviewFrame
             embedKey={profile.embed_key}
             containerRef={containerRef}
-            interactive={interactive}
             selectedFrame={selectedFrame}
             onSelectInline={selectInline}
             onSelectButton={selectButton}
@@ -261,8 +223,8 @@ export default function DashboardCanvas({
               buttonHoverStyle,
             }}
           />
-        </Frame>
-      </div>
+        </section>
+      </main>
 
       <InspectorPanel
         selectedFrame={selectedFrame}

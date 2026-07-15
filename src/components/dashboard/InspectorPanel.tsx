@@ -4,7 +4,7 @@ import type { ButtonHoverStyle } from "@/lib/dal";
 import { FontPicker, HOVER_STYLES, MAX_CORNER_RADIUS } from "./widgetStyleShared";
 import type { ButtonStyleValues } from "./WidgetPreviewFrame";
 import styles from "./widget-ui.module.css";
-import canvasStyles from "./canvas.module.css";
+import pageStyles from "./dashboard-page.module.css";
 
 export type SelectedFrame = "button" | "inline" | null;
 
@@ -81,16 +81,15 @@ export default function InspectorPanel({
   return (
     <div
       data-inspector-panel
-      data-canvas-passthrough
-      className={`${canvasStyles.inspectorPanel} ${open ? canvasStyles.inspectorPanelOpen : ""}`}
+      className={`${pageStyles.inspectorPanel} ${open ? pageStyles.inspectorPanelOpen : ""}`}
     >
       {selectedFrame === "inline" && (
         <>
-          <div className={canvasStyles.inspectorHeader}>
-            <p className={canvasStyles.inspectorTitle}>Appearance</p>
+          <div className={pageStyles.inspectorHeader}>
+            <p className={pageStyles.inspectorTitle}>Appearance</p>
             <button
               type="button"
-              className={canvasStyles.inspectorCloseBtn}
+              className={pageStyles.inspectorCloseBtn}
               onClick={onClose}
               aria-label="Close"
             >
@@ -158,11 +157,11 @@ export default function InspectorPanel({
 
       {selectedFrame === "button" && (
         <>
-          <div className={canvasStyles.inspectorHeader}>
-            <p className={canvasStyles.inspectorTitle}>Button style</p>
+          <div className={pageStyles.inspectorHeader}>
+            <p className={pageStyles.inspectorTitle}>Button style</p>
             <button
               type="button"
-              className={canvasStyles.inspectorCloseBtn}
+              className={pageStyles.inspectorCloseBtn}
               onClick={onClose}
               aria-label="Close"
             >
