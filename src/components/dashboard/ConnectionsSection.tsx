@@ -9,6 +9,7 @@ import {
   respondToRequest,
   type SearchResult,
 } from "@/app/dashboard/connections/actions";
+import AddPlaceholderConnection from "./AddPlaceholderConnection";
 import styles from "./widget-ui.module.css";
 
 type OtherProfile = { id: string; name: string; avatar_url: string | null } | undefined;
@@ -114,6 +115,8 @@ export default function ConnectionsSection({
   return (
     <div className={styles.card}>
       <p className={styles.cardLabel}>Connections</p>
+
+      <AddPlaceholderConnection />
 
       <div className={styles.searchWrap}>
         <input

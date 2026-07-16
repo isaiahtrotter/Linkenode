@@ -38,7 +38,7 @@ const WIDGET_MARKUP = `<div id="widget-root" class="corner-bottom-right">
         </a>
         <a href="#" id="share-network-btn" class="page-link proto-btn" style="padding:8px 12px;border-radius:99px;border-bottom:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="18" r="2.3"/><line x1="7.7" y1="7.3" x2="10.5" y2="16.2"/><line x1="16.3" y1="7.3" x2="13.5" y2="16.2"/><line x1="8.3" y1="6" x2="15.7" y2="6"/></svg>
-          <span>Create your network</span>
+          <span>Made with Linkenode</span>
         </a>
       </div>
       <div id="hover-card" style="position:absolute;display:none;pointer-events:none;z-index:2;width:188px;border-radius:10px;padding:12px 14px;box-sizing:border-box;"></div>

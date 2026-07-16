@@ -38,14 +38,27 @@ export type WidgetSettings = {
 
 export type Profile = {
   id: string;
-  user_id: string;
+  user_id: string | null; // null for a placeholder profile added without an account
   name: string;
   bio: string | null;
   website: string | null;
   avatar_url: string | null;
   embed_key: string;
   widget_settings: WidgetSettings | null;
+  placeholder_owner_id: string | null;
+  merge_dismissed_target_id: string | null;
 };
+
+// Lowercase, strip protocol/www/trailing slash — good enough to notice "the
+// same link" without needing exact string equality.
+export function normalizeUrl(url: string): string {
+  return url
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/+$/, "");
+}
 
 export const getOwnProfile = cache(async () => {
   const user = await requireSessionUser();
@@ -102,17 +115,29 @@ export const getOwnConnectionsData = cache(async () => {
     ),
   );
 
-  const [profilesRes, notesRes, endorsementsRes] = await Promise.all([
+  const [profilesRes, notesRes, endorsementsRes, realProfilesRes] = await Promise.all([
     otherIds.length
-      ? supabase.from("profiles").select("id, name, avatar_url").in("id", otherIds)
+      ? supabase
+          .from("profiles")
+          .select("id, name, avatar_url, user_id, website, placeholder_owner_id, merge_dismissed_target_id")
+          .in("id", otherIds)
       : Promise.resolve({ data: [], error: null }),
     supabase.from("connection_notes").select("*").eq("profile_id", myId),
     supabase.from("endorsements").select("*").eq("from_profile_id", myId),
+    // Used below to suggest merging a placeholder connection into a matching
+    // real account once one exists — only fetched for the "does a real
+    // profile with this website already exist" check, nothing else.
+    supabase
+      .from("profiles")
+      .select("id, name, avatar_url, website")
+      .not("website", "is", null)
+      .not("user_id", "is", null),
   ]);
 
   if (profilesRes.error) throw profilesRes.error;
   if (notesRes.error) throw notesRes.error;
   if (endorsementsRes.error) throw endorsementsRes.error;
+  if (realProfilesRes.error) throw realProfilesRes.error;
 
   const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
   const noteByRequestId = new Map(
@@ -120,6 +145,11 @@ export const getOwnConnectionsData = cache(async () => {
   );
   const endorsementByToId = new Map(
     (endorsementsRes.data ?? []).map((e) => [e.to_profile_id, e.text]),
+  );
+  const realProfileByWebsite = new Map(
+    (realProfilesRes.data ?? [])
+      .filter((p) => p.website)
+      .map((p) => [normalizeUrl(p.website as string), p]),
   );
 
   const incoming = (requests ?? [])
@@ -134,11 +164,22 @@ export const getOwnConnectionsData = cache(async () => {
     .filter((r) => r.status === "accepted")
     .map((r) => {
       const otherId = r.requester_id === myId ? r.recipient_id : r.requester_id;
+      const other = profileById.get(otherId);
+
+      let mergeSuggestion: { id: string; name: string; avatar_url: string | null } | null = null;
+      if (other && !other.user_id && other.placeholder_owner_id === myId && other.website) {
+        const match = realProfileByWebsite.get(normalizeUrl(other.website));
+        if (match && match.id !== other.merge_dismissed_target_id) {
+          mergeSuggestion = { id: match.id, name: match.name, avatar_url: match.avatar_url };
+        }
+      }
+
       return {
         request: r,
-        other: profileById.get(otherId),
+        other,
         note: noteByRequestId.get(r.id) ?? "",
         endorsement: endorsementByToId.get(otherId) ?? "",
+        mergeSuggestion,
       };
     });
 
@@ -159,7 +200,14 @@ export const getNetworkDirectory = cache(async (): Promise<DirectoryEntry[]> => 
 
   const supabase = await createClient();
   const [{ data: allProfiles, error }, connections] = await Promise.all([
-    supabase.from("profiles").select("id, name, bio, avatar_url").order("name"),
+    // Placeholder profiles (added without an account) are private to
+    // whoever added them until merged into a real account — never
+    // searchable/browsable by anyone else.
+    supabase
+      .from("profiles")
+      .select("id, name, bio, avatar_url")
+      .not("user_id", "is", null)
+      .order("name"),
     getOwnConnectionsData(),
   ]);
   if (error) throw error;

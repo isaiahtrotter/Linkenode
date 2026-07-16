@@ -167,3 +167,61 @@ create policy "users can manage own endorsements"
   with check (
     from_profile_id in (select id from public.profiles where user_id = auth.uid())
   );
+
+-- 10. Placeholder ("added without an account") profiles — added when someone
+--     connects to a person who hasn't signed up yet, just a name + one link.
+--     user_id is null for a placeholder. placeholder_owner_id tracks who
+--     added it (only they can edit/merge/delete it). merge_dismissed_target_id
+--     remembers a rejected merge suggestion so it stops reappearing for that
+--     specific candidate. Merging repoints the existing connection_requests
+--     row (and reassigns endorsements) onto the real profile, then deletes
+--     the placeholder — see mergeProfiles in
+--     src/app/dashboard/connections/actions.ts.
+alter table public.profiles
+  alter column user_id drop not null;  -- run only if it's currently NOT NULL
+
+alter table public.profiles
+  add column if not exists placeholder_owner_id uuid references public.profiles(id);
+
+alter table public.profiles
+  add column if not exists merge_dismissed_target_id uuid references public.profiles(id);
+
+create policy "users can create placeholder profiles they own"
+  on public.profiles for insert
+  to authenticated
+  with check (
+    user_id is null
+    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+  );
+
+create policy "owners can manage their placeholder profiles"
+  on public.profiles for all
+  to authenticated
+  using (
+    user_id is null
+    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+  )
+  with check (
+    user_id is null
+    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+  );
+
+-- Storage: let an owner upload an avatar for their placeholder the same way
+-- they upload their own (path convention unchanged: {profile_id}.{ext}).
+create policy "owners can manage their placeholder's avatar file"
+  on storage.objects for all
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and split_part(name, '.', 1) in (
+      select id::text from public.profiles
+      where placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+    )
+  )
+  with check (
+    bucket_id = 'avatars'
+    and split_part(name, '.', 1) in (
+      select id::text from public.profiles
+      where placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+    )
+  );

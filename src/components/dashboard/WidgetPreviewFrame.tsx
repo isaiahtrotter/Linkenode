@@ -11,22 +11,12 @@ import pageStyles from "./dashboard-page.module.css";
 const DEFAULT_LABEL = "View My Network";
 
 type EmbedType = "floating" | "inline";
-type Corner = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+type Corner = "bottom-right" | "bottom-left";
 
 const CORNERS: { value: Corner; label: string }[] = [
   { value: "bottom-right", label: "Bottom right" },
   { value: "bottom-left", label: "Bottom left" },
-  { value: "top-right", label: "Top right" },
-  { value: "top-left", label: "Top left" },
 ];
-
-function escapeAttr(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
 
 export type ButtonStyleValues = {
   buttonFontFamily: string;
@@ -59,9 +49,6 @@ export default function WidgetPreviewFrame({
 }) {
   const [embedType, setEmbedType] = useState<EmbedType>("floating");
   const [corner, setCorner] = useState<Corner>("bottom-right");
-  const [label, setLabel] = useState(DEFAULT_LABEL);
-  const [showIcon, setShowIcon] = useState(true);
-  const [iconEmoji, setIconEmoji] = useState("");
   const [fillContainer, setFillContainer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -70,17 +57,8 @@ export default function WidgetPreviewFrame({
   const attrs = [`data-embed-key="${embedKey}"`];
   if (embedType === "inline") {
     attrs.push('data-mode="inline"');
-  } else {
-    if (corner !== "bottom-right") attrs.push(`data-corner="${corner}"`);
-    const trimmedLabel = label.trim();
-    if (trimmedLabel && trimmedLabel !== DEFAULT_LABEL) {
-      attrs.push(`data-label="${escapeAttr(trimmedLabel)}"`);
-    }
-    if (!showIcon) {
-      attrs.push('data-icon="false"');
-    } else if (iconEmoji.trim()) {
-      attrs.push(`data-icon-emoji="${escapeAttr(iconEmoji.trim())}"`);
-    }
+  } else if (corner !== "bottom-right") {
+    attrs.push(`data-corner="${corner}"`);
   }
   const scriptTag = `<script src="${origin}/widget.js" ${attrs.join(" ")} async></script>`;
   const snippet =
@@ -150,12 +128,7 @@ export default function WidgetPreviewFrame({
           className={`${styles.buttonMimic} ${hoverClass ? styles[hoverClass] : ""}`}
           style={mimicStyle}
         >
-          {showIcon &&
-            (iconEmoji.trim() ? (
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{iconEmoji.trim()}</span>
-            ) : (
-              <LauncherIcon />
-            ))}
+          <LauncherIcon />
           <span
             className={styles.buttonMimicLabel}
             style={{
@@ -165,7 +138,7 @@ export default function WidgetPreviewFrame({
               letterSpacing: buttonLetterSpacing,
             }}
           >
-            {label.trim() || DEFAULT_LABEL}
+            {DEFAULT_LABEL}
           </span>
         </div>
       </div>
@@ -211,58 +184,20 @@ export default function WidgetPreviewFrame({
               </div>
             </>
           ) : (
-            <>
-              <div className={styles.fieldRowGroup}>
-                <div className={styles.fieldRow} style={{ flex: "0 0 120px" }}>
-                  <span className={styles.label}>Corner</span>
-                  <select
-                    value={corner}
-                    onChange={(e) => setCorner(e.target.value as Corner)}
-                    className={styles.input}
-                  >
-                    {CORNERS.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.fieldRow}>
-                  <span className={styles.label}>Button text</span>
-                  <input
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    placeholder={DEFAULT_LABEL}
-                    className={styles.input}
-                  />
-                </div>
-
-                <div className={styles.fieldRow} style={{ flex: "0 0 auto", alignItems: "center" }}>
-                  <span className={styles.label}>Icon</span>
-                  <button
-                    type="button"
-                    className={`${styles.switch} ${showIcon ? styles.switchOn : ""}`}
-                    onClick={() => setShowIcon((v) => !v)}
-                    aria-label="Toggle icon"
-                  >
-                    <span className={styles.switchKnob} />
-                  </button>
-                </div>
-              </div>
-
-              {showIcon && (
-                <div className={styles.fieldRow}>
-                  <span className={styles.label}>Custom icon (optional)</span>
-                  <input
-                    value={iconEmoji}
-                    onChange={(e) => setIconEmoji(e.target.value)}
-                    placeholder="Paste any emoji, e.g. 👋 — leave blank for the default"
-                    className={styles.input}
-                  />
-                </div>
-              )}
-            </>
+            <div className={styles.fieldRow} style={{ flex: "0 0 160px" }}>
+              <span className={styles.label}>Corner</span>
+              <select
+                value={corner}
+                onChange={(e) => setCorner(e.target.value as Corner)}
+                className={styles.input}
+              >
+                {CORNERS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
           <pre className={styles.snippet}>{snippet}</pre>
