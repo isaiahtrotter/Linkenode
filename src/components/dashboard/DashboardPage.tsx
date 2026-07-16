@@ -107,43 +107,40 @@ export default function DashboardPage({
           </form>
         </header>
 
-        <div className={styles.layout}>
-          <main className={styles.main}>
-            <section className={styles.section}>
-              <p className={styles.sectionTitle}>Profile</p>
-              <div className={widgetUiStyles.mainCol}>
-                <ProfileSection profile={profile} />
-              </div>
-            </section>
-
-            <section className={styles.section}>
-              <p className={styles.sectionTitle}>Connections</p>
-              <div className={widgetUiStyles.mainCol}>
-                <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
-                <YourNetworkSection accepted={connections.accepted} />
-              </div>
-            </section>
-
-            <section className={styles.section}>
-              <p className={styles.sectionTitle}>Work samples</p>
-              <div className={widgetUiStyles.mainCol}>
-                <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
-              </div>
-            </section>
-          </main>
-
-          <aside className={styles.embedSide}>
-            <div className={styles.embedSideSticky}>
-              <WidgetPreviewFrame
-                embedKey={profile.embed_key}
-                networkVersion={networkVersion}
-                label={label}
-                onSaveLabel={handleSaveLabel}
-                onSaveTheme={handleSaveTheme}
-              />
+        <main className={styles.main}>
+          <section className={styles.section}>
+            <p className={styles.sectionTitle}>Profile</p>
+            <div className={widgetUiStyles.mainCol}>
+              <ProfileSection profile={profile} />
             </div>
-          </aside>
-        </div>
+          </section>
+
+          <section className={styles.section}>
+            <p className={styles.sectionTitle}>Connections</p>
+            <div className={widgetUiStyles.mainCol}>
+              <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
+              <YourNetworkSection accepted={connections.accepted} />
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <p className={styles.sectionTitle}>Work samples</p>
+            <div className={widgetUiStyles.mainCol}>
+              <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <p className={styles.sectionTitle}>Embed</p>
+            <WidgetPreviewFrame
+              embedKey={profile.embed_key}
+              networkVersion={networkVersion}
+              label={label}
+              onSaveLabel={handleSaveLabel}
+              onSaveTheme={handleSaveTheme}
+            />
+          </section>
+        </main>
       </div>
     </ToastProvider>
   );
