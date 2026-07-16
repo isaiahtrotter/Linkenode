@@ -8,10 +8,26 @@ import styles from "./widget-ui.module.css";
 
 type Corner = "bottom-right" | "bottom-left";
 
-const CORNERS: { value: Corner; label: string }[] = [
-  { value: "bottom-right", label: "Bottom right" },
-  { value: "bottom-left", label: "Bottom left" },
-];
+// One shared graphic, mirrored via the black pill's x position, rather than
+// two near-duplicate SVGs -- bottom-left sits at x=10, bottom-right at
+// x=335 (the same numbers as the two designs this was built from).
+function CornerGraphic({ corner }: { corner: Corner }) {
+  const buttonX = corner === "bottom-left" ? 10 : 335;
+  return (
+    <svg viewBox="0 0 402 270" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="402" height="270" rx="10" fill="white" />
+      <rect y="176" width="112" height="94" fill="#D9D9D9" />
+      <rect y="45" width="112" height="128" fill="#D9D9D9" />
+      <rect x="115" y="45" width="287" height="225" fill="#D9D9D9" />
+      <rect x={buttonX} y="240" width="56" height="20" rx="7" fill="black" />
+      <rect x="10" y="14" width="14" height="14" rx="7" fill="#D9D9D9" />
+      <rect x="223" y="18.5" width="31" height="5" rx="2.5" fill="#D9D9D9" />
+      <rect x="264" y="18.5" width="29" height="5" rx="2.5" fill="#D9D9D9" />
+      <rect x="303" y="18.5" width="43" height="5" rx="2.5" fill="#D9D9D9" />
+      <rect x="356" y="18.5" width="35" height="5" rx="2.5" fill="#D9D9D9" />
+    </svg>
+  );
+}
 
 export default function WidgetPreviewFrame({
   embedKey,
@@ -116,19 +132,28 @@ export default function WidgetPreviewFrame({
       <div className={styles.card}>
         <p className={styles.cardLabel}>Embed on your site</p>
 
-        <div className={styles.fieldRow} style={{ flex: "0 0 160px" }}>
+        <div className={styles.fieldRow}>
           <span className={styles.label}>Corner</span>
-          <select
-            value={corner}
-            onChange={(e) => setCorner(e.target.value as Corner)}
-            className={styles.input}
-          >
-            {CORNERS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          <div className={styles.cornerPickerRow}>
+            <button
+              type="button"
+              className={`${styles.cornerOption} ${corner === "bottom-left" ? styles.cornerOptionActive : ""}`}
+              onClick={() => setCorner("bottom-left")}
+              aria-pressed={corner === "bottom-left"}
+              aria-label="Bottom left"
+            >
+              <CornerGraphic corner="bottom-left" />
+            </button>
+            <button
+              type="button"
+              className={`${styles.cornerOption} ${corner === "bottom-right" ? styles.cornerOptionActive : ""}`}
+              onClick={() => setCorner("bottom-right")}
+              aria-pressed={corner === "bottom-right"}
+              aria-label="Bottom right"
+            >
+              <CornerGraphic corner="bottom-right" />
+            </button>
+          </div>
         </div>
 
         <pre className={styles.snippet}>{snippet}</pre>

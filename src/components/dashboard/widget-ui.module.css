@@ -137,6 +137,40 @@
   margin-bottom: 12px;
 }
 
+.cornerPickerRow {
+  display: flex;
+  gap: 10px;
+}
+
+.cornerOption {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease;
+  line-height: 0;
+}
+
+.cornerOption svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cornerOption:hover {
+  outline-color: rgba(99, 91, 255, 0.35);
+}
+
+.cornerOptionActive {
+  outline-color: #635bff;
+}
+
 .fieldRowGroup {
   display: flex;
   gap: 10px;
