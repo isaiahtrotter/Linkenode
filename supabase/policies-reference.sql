@@ -186,12 +186,28 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists merge_dismissed_target_id uuid references public.profiles(id);
 
+-- A policy ON profiles whose own condition subqueries profiles again (to
+-- look up "my own profile id") causes Postgres to re-apply that same
+-- policy to the inner subquery, forever — "infinite recursion detected in
+-- policy for relation profiles" (42P17). A SECURITY DEFINER function
+-- breaks the cycle: it runs with the function owner's privileges, which
+-- bypass RLS, so the lookup inside it never re-triggers these policies.
+create or replace function public.my_profile_id()
+returns uuid
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select id from public.profiles where user_id = auth.uid()
+$$;
+
 create policy "users can create placeholder profiles they own"
   on public.profiles for insert
   to authenticated
   with check (
     user_id is null
-    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+    and placeholder_owner_id = public.my_profile_id()
   );
 
 create policy "owners can manage their placeholder profiles"
@@ -199,11 +215,11 @@ create policy "owners can manage their placeholder profiles"
   to authenticated
   using (
     user_id is null
-    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+    and placeholder_owner_id = public.my_profile_id()
   )
   with check (
     user_id is null
-    and placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+    and placeholder_owner_id = public.my_profile_id()
   );
 
 -- Storage: let an owner upload an avatar for their placeholder the same way
@@ -215,13 +231,13 @@ create policy "owners can manage their placeholder's avatar file"
     bucket_id = 'avatars'
     and split_part(name, '.', 1) in (
       select id::text from public.profiles
-      where placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+      where placeholder_owner_id = public.my_profile_id()
     )
   )
   with check (
     bucket_id = 'avatars'
     and split_part(name, '.', 1) in (
       select id::text from public.profiles
-      where placeholder_owner_id in (select id from public.profiles where user_id = auth.uid())
+      where placeholder_owner_id = public.my_profile_id()
     )
   );

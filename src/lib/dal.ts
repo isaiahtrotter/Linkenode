@@ -115,18 +115,47 @@ export const getOwnConnectionsData = cache(async () => {
     ),
   );
 
-  const [profilesRes, notesRes, endorsementsRes, realProfilesRes] = await Promise.all([
-    otherIds.length
-      ? supabase
-          .from("profiles")
-          .select("id, name, avatar_url, user_id, website, placeholder_owner_id, merge_dismissed_target_id")
-          .in("id", otherIds)
-      : Promise.resolve({ data: [], error: null }),
+  type OtherProfileRow = {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    user_id: string | null;
+    website: string | null;
+    placeholder_owner_id?: string | null;
+    merge_dismissed_target_id?: string | null;
+  };
+
+  // The placeholder-profile columns (placeholder_owner_id,
+  // merge_dismissed_target_id — see supabase/policies-reference.sql section
+  // 10) may not exist yet if that migration hasn't been run against the
+  // live database. Degrade to the base columns in that case rather than
+  // throwing and taking down the entire dashboard over a feature whose
+  // schema isn't set up yet — merge suggestions just won't compute until
+  // then, but everything else keeps working.
+  async function fetchOtherProfiles(): Promise<OtherProfileRow[]> {
+    if (!otherIds.length) return [];
+    const extended = await supabase
+      .from("profiles")
+      .select("id, name, avatar_url, user_id, website, placeholder_owner_id, merge_dismissed_target_id")
+      .in("id", otherIds);
+    if (!extended.error) return (extended.data ?? []) as OtherProfileRow[];
+
+    const fallback = await supabase
+      .from("profiles")
+      .select("id, name, avatar_url, user_id, website")
+      .in("id", otherIds);
+    if (fallback.error) throw fallback.error;
+    return (fallback.data ?? []) as OtherProfileRow[];
+  }
+
+  const [otherProfiles, notesRes, endorsementsRes, realProfilesRes] = await Promise.all([
+    fetchOtherProfiles(),
     supabase.from("connection_notes").select("*").eq("profile_id", myId),
     supabase.from("endorsements").select("*").eq("from_profile_id", myId),
     // Used below to suggest merging a placeholder connection into a matching
     // real account once one exists — only fetched for the "does a real
-    // profile with this website already exist" check, nothing else.
+    // profile with this website already exist" check, nothing else. Only
+    // ever references pre-existing columns, so no fallback needed here.
     supabase
       .from("profiles")
       .select("id, name, avatar_url, website")
@@ -134,12 +163,11 @@ export const getOwnConnectionsData = cache(async () => {
       .not("user_id", "is", null),
   ]);
 
-  if (profilesRes.error) throw profilesRes.error;
   if (notesRes.error) throw notesRes.error;
   if (endorsementsRes.error) throw endorsementsRes.error;
   if (realProfilesRes.error) throw realProfilesRes.error;
 
-  const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const profileById = new Map(otherProfiles.map((p) => [p.id, p]));
   const noteByRequestId = new Map(
     (notesRes.data ?? []).map((n) => [n.connection_request_id, n.note]),
   );
