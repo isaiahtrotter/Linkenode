@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CSSProperties, RefObject } from "react";
+import type { CSSProperties } from "react";
 import NetworkWidget from "@/components/NetworkWidget";
 import type { ButtonHoverStyle } from "@/lib/dal";
 import { FONT_BY_ID, FONT_OPTIONS, HOVER_STYLE_CLASS, LauncherIcon } from "./widgetStyleShared";
 import styles from "./widget-ui.module.css";
-import pageStyles from "./dashboard-page.module.css";
 
 const DEFAULT_LABEL = "View My Network";
 
@@ -33,15 +32,15 @@ export type ButtonStyleValues = {
 
 export default function WidgetPreviewFrame({
   embedKey,
-  containerRef,
-  selectedFrame,
-  onSelectInline,
+  networkVersion,
   buttonStyle,
 }: {
   embedKey: string;
-  containerRef: RefObject<HTMLDivElement | null>;
-  selectedFrame: "inline" | null;
-  onSelectInline: () => void;
+  // Changes whenever who's in the network changes (add/remove/merge) —
+  // used as NetworkWidget's key below to force a full remount + refetch,
+  // since the widget only ever fetches once per mount otherwise (see
+  // NetworkWidget.tsx's `initialized` ref).
+  networkVersion: string;
   buttonStyle: ButtonStyleValues;
 }) {
   // Inline embed mode is hidden for now (floating is the only option exposed
@@ -92,20 +91,11 @@ export default function WidgetPreviewFrame({
 
   return (
     <div className={styles.mainCol}>
-      <div
-        data-select-trigger="inline"
-        onClickCapture={onSelectInline}
-        className={`${pageStyles.selectableWrap} ${selectedFrame === "inline" ? pageStyles.selectableWrapActive : ""}`}
-      >
-        {/* Capture phase, not bubble — the live D3 graph's own node-click
-            handler calls stopPropagation() (it's meant to stop a real
-            third-party embed's clicks from leaking into the host page),
-            which would otherwise silently swallow a bubble-phase onClick
-            here before it ever fires. Capture runs on the way down, before
-            that stopPropagation happens on the way back up. */}
-        <div className={styles.previewCard} ref={containerRef}>
-          <NetworkWidget embedKey={embedKey} mode="inline" />
-        </div>
+      {/* key forces a full remount (fresh fetch + reinit) whenever the
+          network's membership changes, rather than showing stale data —
+          NetworkWidget otherwise only ever fetches once per mount. */}
+      <div className={styles.previewCard}>
+        <NetworkWidget key={networkVersion} embedKey={embedKey} mode="inline" />
       </div>
 
       <div className={styles.buttonPreviewWrap}>

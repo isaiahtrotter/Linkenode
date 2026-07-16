@@ -18,8 +18,16 @@ function decodeHtmlEntities(value: string): string {
 
 // Meta tags vary in attribute order (content before property/name is
 // common), so parse each tag's attributes as a bag rather than assuming a
-// fixed order.
-function findMetaContent(html: string, names: string[]): string | null {
+// fixed order. Collects every tag up front (keyed by property/name, first
+// occurrence wins) so callers can look values up by *preference* order —
+// looping and returning on the first name-match found, like the original
+// version of this function did, silently returns whichever tag happens to
+// sit first in the document instead of the caller's preferred one (this is
+// exactly how a Twitter/X profile page's earlier twitter:image — its cover
+// banner — got returned ahead of the later, correct og:image — the actual
+// avatar).
+function collectMetaTags(html: string): Map<string, string> {
+  const tags = new Map<string, string>();
   const metaTagRegex = /<meta\s+([^>]*)>/gi;
   let tagMatch: RegExpExecArray | null;
   while ((tagMatch = metaTagRegex.exec(html))) {
@@ -29,22 +37,47 @@ function findMetaContent(html: string, names: string[]): string | null {
     while ((attrMatch = attrRegex.exec(tagMatch[1]))) {
       attrs[attrMatch[1].toLowerCase()] = attrMatch[2];
     }
-    const key = attrs.property ?? attrs.name;
-    if (key && names.includes(key.toLowerCase()) && attrs.content) {
-      return decodeHtmlEntities(attrs.content);
+    const key = (attrs.property ?? attrs.name)?.toLowerCase();
+    if (key && attrs.content && !tags.has(key)) {
+      tags.set(key, decodeHtmlEntities(attrs.content));
     }
   }
+  return tags;
+}
+
+function pickByPreference(tags: Map<string, string>, namesInPreferenceOrder: string[]): string | null {
+  for (const name of namesInPreferenceOrder) {
+    const value = tags.get(name);
+    if (value) return value;
+  }
   return null;
+}
+
+// Some sites' og:image is the person's actual profile photo (GitHub,
+// X/Twitter); on others it's whatever they last posted (Dribbble's og:image
+// is their latest shot, not a headshot). A URL explicitly labeled "avatar"
+// is a much stronger signal for "this is literally the person's photo," so
+// prefer one when the page has it.
+// Must end in a real image extension — an earlier version matched anything
+// with "avatar" in the URL and picked up a JS asset bundle (e.g.
+// "avatar-B9hX8058.js") on one site and a bare preconnect hostname with no
+// path at all on another.
+const AVATAR_URL_REGEX =
+  /https:\/\/[^\s"'<>\\]*avatars?[^\s"'<>\\]*\.(?:png|jpe?g|webp|gif|svg)(?:\?[^\s"'<>\\]*)?/i;
+
+function findAvatarUrl(html: string): string | null {
+  return html.match(AVATAR_URL_REGEX)?.[0] ?? null;
 }
 
 export type DetectedProfile = { name: string | null; imageUrl: string | null };
 
 // Best-effort — pulls a name/photo from a portfolio/social link via its
-// Open Graph / Twitter Card meta tags. Works generically across most sites
-// without needing per-platform API keys, but isn't guaranteed: some sites
-// (X/Twitter profile pages especially) block non-browser fetches or render
-// client-side with no usable tags in the raw HTML. Never throws — callers
-// treat a null result as "detection didn't work," not an error.
+// Open Graph / Twitter Card meta tags (plus a scan for an explicitly
+// avatar-labeled image URL, see findAvatarUrl above). Works generically
+// across most sites without needing per-platform API keys, but isn't
+// guaranteed: some sites block non-browser fetches or render client-side
+// with no usable tags in the raw HTML. Never throws — callers treat a null
+// result as "detection didn't work," not an error.
 export async function detectProfileFromLink(url: string): Promise<DetectedProfile> {
   try {
     const res = await fetch(url, {
@@ -57,8 +90,10 @@ export async function detectProfileFromLink(url: string): Promise<DetectedProfil
     const fullText = await res.text();
     const html = fullText.slice(0, MAX_HTML_BYTES);
 
-    const name = findMetaContent(html, ["og:title", "twitter:title"]);
-    const imageUrl = findMetaContent(html, ["og:image", "twitter:image"]);
+    const tags = collectMetaTags(html);
+    const name = pickByPreference(tags, ["og:title", "twitter:title"]);
+    const imageUrl =
+      findAvatarUrl(html) ?? pickByPreference(tags, ["og:image", "twitter:image"]);
     return { name, imageUrl };
   } catch {
     return { name: null, imageUrl: null };

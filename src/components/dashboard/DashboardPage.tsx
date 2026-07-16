@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
-import { signOut, updateWidgetSettings } from "@/app/dashboard/actions";
+import { useState } from "react";
+import { signOut } from "@/app/dashboard/actions";
 import type { DirectoryEntry, Profile, WidgetSettings, WorkSample } from "@/lib/dal";
-import { DEFAULT_SETTINGS, MAX_CORNER_RADIUS, shadowCss } from "./widgetStyleShared";
-import InspectorPanel from "./InspectorPanel";
+import { DEFAULT_SETTINGS, MAX_CORNER_RADIUS } from "./widgetStyleShared";
 import WidgetPreviewFrame from "./WidgetPreviewFrame";
 import ProfileSection from "./ProfileSection";
 import WorkSamplesSection from "./WorkSamplesSection";
@@ -13,8 +11,6 @@ import ConnectionsSection from "./ConnectionsSection";
 import YourNetworkSection from "./YourNetworkSection";
 import styles from "./dashboard-page.module.css";
 import widgetUiStyles from "./widget-ui.module.css";
-
-type SelectedFrame = "inline" | null;
 
 type ConnectionsSectionProps = Parameters<typeof ConnectionsSection>[0];
 type YourNetworkSectionProps = Parameters<typeof YourNetworkSection>[0];
@@ -43,23 +39,11 @@ export default function DashboardPage({
   // (missing newer fields entirely), so an all-or-nothing fallback leaves
   // those fields undefined and crashes the controls below.
   const settings: WidgetSettings = { ...DEFAULT_SETTINGS, ...profile.widget_settings };
-  // shadow itself used to be a boolean; coerce old saved values to the new
-  // 0-100 scale (mirrors the same coercion in the widget engine).
-  const rawShadow = settings.shadow as number | boolean;
-  const initialShadow = typeof rawShadow === "boolean" ? (rawShadow ? 60 : 0) : rawShadow;
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const currentThemeRef = useRef(settings.theme);
-
-  const [cornerRadius, setCornerRadius] = useState(
-    Math.min(settings.cornerRadius, MAX_CORNER_RADIUS),
-  );
-  const [theme, setTheme] = useState(settings.theme);
-  const [shadow, setShadow] = useState(initialShadow);
-  // Button styling is no longer editable (only its corner placement is, in
-  // WidgetPreviewFrame's embed snippet card) — these just carry the
-  // persisted values through so Save doesn't clobber them, and so the
-  // button preview still renders correctly.
+  // Neither the inline preview (radius/shadow/theme) nor the button style
+  // panel is editable right now — both are hidden for now. These just carry
+  // the persisted values through so the button preview still renders
+  // correctly and nothing gets clobbered if editing comes back later.
   const [buttonFontFamily] = useState(settings.buttonFontFamily);
   const [buttonFontSize] = useState(settings.buttonFontSize);
   const [buttonFontWeight] = useState(settings.buttonFontWeight);
@@ -68,90 +52,20 @@ export default function DashboardPage({
   const [buttonPaddingY] = useState(settings.buttonPaddingY);
   const [buttonBorderColor] = useState(settings.buttonBorderColor);
   const [buttonBorderWidth] = useState(settings.buttonBorderWidth);
-  const [buttonBorderRadius] = useState(settings.buttonBorderRadius);
+  const [buttonBorderRadius] = useState(
+    Math.min(settings.buttonBorderRadius, MAX_CORNER_RADIUS),
+  );
   const [buttonBackgroundColor] = useState(settings.buttonBackgroundColor);
   const [buttonHoverStyle] = useState(settings.buttonHoverStyle);
-  const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
-  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [selectedFrame, setSelectedFrame] = useState<SelectedFrame>(null);
-
-  function getWidgetRoot(): HTMLElement | null {
-    return containerRef.current?.querySelector("#widget-root") ?? null;
-  }
-
-  function handleRadiusChange(value: number) {
-    setCornerRadius(value);
-    getWidgetRoot()?.style.setProperty("--wt-radius", `${value}px`);
-  }
-
-  function handleShadowChange(value: number) {
-    setShadow(value);
-    getWidgetRoot()?.style.setProperty("--wt-shadow", shadowCss(value));
-  }
-
-  function handleThemeChange(value: "light" | "dark") {
-    setTheme(value);
-    if (currentThemeRef.current !== value) {
-      const toggleBtn = containerRef.current?.querySelector<HTMLButtonElement>(
-        "#theme-toggle-btn",
-      );
-      toggleBtn?.click();
-      currentThemeRef.current = value;
-    }
-  }
-
-  function handleResetAppearance() {
-    handleRadiusChange(DEFAULT_SETTINGS.cornerRadius);
-    handleShadowChange(DEFAULT_SETTINGS.shadow);
-    handleThemeChange(DEFAULT_SETTINGS.theme);
-  }
-
-  function handleSave() {
-    setSaveState("saved");
-    setSaveError(null);
-    setTimeout(() => setSaveState((s) => (s === "saved" ? "idle" : s)), 1500);
-
-    updateWidgetSettings({
-      theme,
-      cornerRadius,
-      shadow,
-      buttonFontFamily,
-      buttonFontSize,
-      buttonFontWeight,
-      buttonLetterSpacing,
-      buttonPaddingX,
-      buttonPaddingY,
-      buttonBorderColor,
-      buttonBorderWidth,
-      buttonBorderRadius,
-      buttonBackgroundColor,
-      buttonHoverStyle,
-    }).catch((err) => {
-      setSaveState("error");
-      setSaveError(err instanceof Error ? err.message : "Couldn't save appearance.");
-    });
-  }
-
-  const selectInline = useCallback(() => setSelectedFrame("inline"), []);
-  const closeInspector = useCallback(() => setSelectedFrame(null), []);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setSelectedFrame(null);
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  // Clicking anything that isn't a preview's own select-trigger and isn't
-  // inside the inspector panel itself clears the selection.
-  const handlePageClick = useCallback((e: ReactMouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest("[data-inspector-panel]")) return;
-    if (target.closest("[data-select-trigger]")) return;
-    setSelectedFrame(null);
-  }, []);
+  // Who's actually in the network right now — changes whenever a connection
+  // is added, removed, or merged, regardless of order, so the live preview
+  // below can key off it and remount (re-fetch) instead of showing stale data.
+  const networkVersion = connections.accepted
+    .map((r) => r.other?.id ?? "")
+    .filter(Boolean)
+    .sort()
+    .join(",");
 
   return (
     <div className={styles.pageShell}>
@@ -171,12 +85,11 @@ export default function DashboardPage({
         </form>
       </header>
 
-      <main className={styles.main} onClick={handlePageClick}>
+      <main className={styles.main}>
         <section className={styles.section}>
           <p className={styles.sectionTitle}>Profile</p>
           <div className={widgetUiStyles.mainCol}>
             <ProfileSection profile={profile} />
-            <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
           </div>
         </section>
 
@@ -189,12 +102,17 @@ export default function DashboardPage({
         </section>
 
         <section className={styles.section}>
+          <p className={styles.sectionTitle}>Work samples</p>
+          <div className={widgetUiStyles.mainCol}>
+            <WorkSamplesSection profileId={profile.id} workSamples={workSamples} />
+          </div>
+        </section>
+
+        <section className={styles.section}>
           <p className={styles.sectionTitle}>Embed</p>
           <WidgetPreviewFrame
             embedKey={profile.embed_key}
-            containerRef={containerRef}
-            selectedFrame={selectedFrame}
-            onSelectInline={selectInline}
+            networkVersion={networkVersion}
             buttonStyle={{
               buttonFontFamily,
               buttonFontSize,
@@ -211,21 +129,6 @@ export default function DashboardPage({
           />
         </section>
       </main>
-
-      <InspectorPanel
-        selectedFrame={selectedFrame}
-        onClose={closeInspector}
-        appearance={{ cornerRadius, theme, shadow }}
-        appearanceActions={{
-          onRadiusChange: handleRadiusChange,
-          onShadowChange: handleShadowChange,
-          onThemeChange: handleThemeChange,
-          onReset: handleResetAppearance,
-        }}
-        onSave={handleSave}
-        saveState={saveState}
-        saveError={saveError}
-      />
     </div>
   );
 }
