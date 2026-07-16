@@ -10,7 +10,6 @@ import pageStyles from "./dashboard-page.module.css";
 
 const DEFAULT_LABEL = "View My Network";
 
-type EmbedType = "floating" | "inline";
 type Corner = "bottom-right" | "bottom-left";
 
 const CORNERS: { value: Corner; label: string }[] = [
@@ -37,36 +36,26 @@ export default function WidgetPreviewFrame({
   containerRef,
   selectedFrame,
   onSelectInline,
-  onSelectButton,
   buttonStyle,
 }: {
   embedKey: string;
   containerRef: RefObject<HTMLDivElement | null>;
-  selectedFrame: "button" | "inline" | null;
+  selectedFrame: "inline" | null;
   onSelectInline: () => void;
-  onSelectButton: () => void;
   buttonStyle: ButtonStyleValues;
 }) {
-  const [embedType, setEmbedType] = useState<EmbedType>("floating");
+  // Inline embed mode is hidden for now (floating is the only option exposed
+  // here) — the widget engine itself still fully supports data-mode="inline"
+  // via a hand-written script tag, this just isn't surfaced in the snippet
+  // builder at the moment.
   const [corner, setCorner] = useState<Corner>("bottom-right");
-  const [fillContainer, setFillContainer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
 
   const attrs = [`data-embed-key="${embedKey}"`];
-  if (embedType === "inline") {
-    attrs.push('data-mode="inline"');
-  } else if (corner !== "bottom-right") {
-    attrs.push(`data-corner="${corner}"`);
-  }
-  const scriptTag = `<script src="${origin}/widget.js" ${attrs.join(" ")} async></script>`;
-  const snippet =
-    embedType === "inline"
-      ? fillContainer
-        ? `<div style="width: 100%; height: 100%;">\n  ${scriptTag}\n</div>`
-        : `<div style="width: 480px; height: 600px;">\n  ${scriptTag}\n</div>`
-      : scriptTag;
+  if (corner !== "bottom-right") attrs.push(`data-corner="${corner}"`);
+  const snippet = `<script src="${origin}/widget.js" ${attrs.join(" ")} async></script>`;
 
   function copy() {
     navigator.clipboard.writeText(snippet);
@@ -119,11 +108,7 @@ export default function WidgetPreviewFrame({
         </div>
       </div>
 
-      <div
-        data-select-trigger="button"
-        onClickCapture={onSelectButton}
-        className={`${styles.buttonPreviewWrap} ${pageStyles.selectableWrap} ${selectedFrame === "button" ? pageStyles.selectableWrapActive : ""}`}
-      >
+      <div className={styles.buttonPreviewWrap}>
         <div
           className={`${styles.buttonMimic} ${hoverClass ? styles[hoverClass] : ""}`}
           style={mimicStyle}
@@ -146,64 +131,25 @@ export default function WidgetPreviewFrame({
       <div className={styles.card}>
         <p className={styles.cardLabel}>Embed on your site</p>
 
-          <div className={styles.modeToggle}>
-            <button
-              type="button"
-              onClick={() => setEmbedType("floating")}
-              className={`${styles.modeOption} ${embedType === "floating" ? styles.modeOptionActive : ""}`}
-            >
-              Floating button
-            </button>
-            <button
-              type="button"
-              onClick={() => setEmbedType("inline")}
-              className={`${styles.modeOption} ${embedType === "inline" ? styles.modeOptionActive : ""}`}
-            >
-              Inline
-            </button>
-          </div>
+        <div className={styles.fieldRow} style={{ flex: "0 0 160px" }}>
+          <span className={styles.label}>Corner</span>
+          <select
+            value={corner}
+            onChange={(e) => setCorner(e.target.value as Corner)}
+            className={styles.input}
+          >
+            {CORNERS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {embedType === "inline" ? (
-            <>
-              <p className={styles.hint} style={{ marginBottom: 10 }}>
-                Sits directly in your page, always open, and fills whatever
-                element you put the script tag in.
-              </p>
-              <div className={styles.controlRow} style={{ marginBottom: 12 }}>
-                <div className={styles.controlLabelRow}>
-                  <span>Fill container instead of a fixed size</span>
-                  <button
-                    type="button"
-                    className={`${styles.switch} ${fillContainer ? styles.switchOn : ""}`}
-                    onClick={() => setFillContainer((v) => !v)}
-                    aria-label="Toggle fill container"
-                  >
-                    <span className={styles.switchKnob} />
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className={styles.fieldRow} style={{ flex: "0 0 160px" }}>
-              <span className={styles.label}>Corner</span>
-              <select
-                value={corner}
-                onChange={(e) => setCorner(e.target.value as Corner)}
-                className={styles.input}
-              >
-                {CORNERS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <pre className={styles.snippet}>{snippet}</pre>
-          <button onClick={copy} className={styles.btnPrimary}>
-            {copied ? "Copied!" : "Copy to clipboard"}
-          </button>
+        <pre className={styles.snippet}>{snippet}</pre>
+        <button onClick={copy} className={styles.btnPrimary}>
+          {copied ? "Copied!" : "Copy to clipboard"}
+        </button>
       </div>
     </div>
   );

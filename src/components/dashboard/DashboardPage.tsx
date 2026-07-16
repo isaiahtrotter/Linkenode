@@ -10,12 +10,11 @@ import WidgetPreviewFrame from "./WidgetPreviewFrame";
 import ProfileSection from "./ProfileSection";
 import WorkSamplesSection from "./WorkSamplesSection";
 import ConnectionsSection from "./ConnectionsSection";
-import NetworkDirectory from "./NetworkDirectory";
 import YourNetworkSection from "./YourNetworkSection";
 import styles from "./dashboard-page.module.css";
 import widgetUiStyles from "./widget-ui.module.css";
 
-type SelectedFrame = "button" | "inline" | null;
+type SelectedFrame = "inline" | null;
 
 type ConnectionsSectionProps = Parameters<typeof ConnectionsSection>[0];
 type YourNetworkSectionProps = Parameters<typeof YourNetworkSection>[0];
@@ -30,12 +29,14 @@ export default function DashboardPage({
   profile,
   workSamples,
   connections,
-  directory,
 }: {
   profile: Profile;
   workSamples: WorkSample[];
   connections: ConnectionsData;
-  directory: DirectoryEntry[];
+  // Fetched by the page but not rendered right now — the "Everyone in the
+  // network" directory is hidden for now (see YourNetworkSection instead),
+  // kept in the prop list so it's a one-line change to bring back.
+  directory?: DirectoryEntry[];
 }) {
   // Merge field-by-field rather than initialSettings ?? DEFAULT_SETTINGS —
   // existing profiles saved their widget_settings under an older schema
@@ -55,19 +56,21 @@ export default function DashboardPage({
   );
   const [theme, setTheme] = useState(settings.theme);
   const [shadow, setShadow] = useState(initialShadow);
-  const [buttonFontFamily, setButtonFontFamily] = useState(settings.buttonFontFamily);
-  const [buttonFontSize, setButtonFontSize] = useState(settings.buttonFontSize);
-  const [buttonFontWeight, setButtonFontWeight] = useState(settings.buttonFontWeight);
-  const [buttonLetterSpacing, setButtonLetterSpacing] = useState(settings.buttonLetterSpacing);
-  const [buttonPaddingX, setButtonPaddingX] = useState(settings.buttonPaddingX);
-  const [buttonPaddingY, setButtonPaddingY] = useState(settings.buttonPaddingY);
-  const [buttonBorderColor, setButtonBorderColor] = useState(settings.buttonBorderColor);
-  const [buttonBorderWidth, setButtonBorderWidth] = useState(settings.buttonBorderWidth);
-  const [buttonBorderRadius, setButtonBorderRadius] = useState(settings.buttonBorderRadius);
-  const [buttonBackgroundColor, setButtonBackgroundColor] = useState(
-    settings.buttonBackgroundColor,
-  );
-  const [buttonHoverStyle, setButtonHoverStyle] = useState(settings.buttonHoverStyle);
+  // Button styling is no longer editable (only its corner placement is, in
+  // WidgetPreviewFrame's embed snippet card) — these just carry the
+  // persisted values through so Save doesn't clobber them, and so the
+  // button preview still renders correctly.
+  const [buttonFontFamily] = useState(settings.buttonFontFamily);
+  const [buttonFontSize] = useState(settings.buttonFontSize);
+  const [buttonFontWeight] = useState(settings.buttonFontWeight);
+  const [buttonLetterSpacing] = useState(settings.buttonLetterSpacing);
+  const [buttonPaddingX] = useState(settings.buttonPaddingX);
+  const [buttonPaddingY] = useState(settings.buttonPaddingY);
+  const [buttonBorderColor] = useState(settings.buttonBorderColor);
+  const [buttonBorderWidth] = useState(settings.buttonBorderWidth);
+  const [buttonBorderRadius] = useState(settings.buttonBorderRadius);
+  const [buttonBackgroundColor] = useState(settings.buttonBackgroundColor);
+  const [buttonHoverStyle] = useState(settings.buttonHoverStyle);
   const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -104,20 +107,6 @@ export default function DashboardPage({
     handleThemeChange(DEFAULT_SETTINGS.theme);
   }
 
-  function handleResetButtonStyle() {
-    setButtonFontFamily(DEFAULT_SETTINGS.buttonFontFamily);
-    setButtonFontSize(DEFAULT_SETTINGS.buttonFontSize);
-    setButtonFontWeight(DEFAULT_SETTINGS.buttonFontWeight);
-    setButtonLetterSpacing(DEFAULT_SETTINGS.buttonLetterSpacing);
-    setButtonPaddingX(DEFAULT_SETTINGS.buttonPaddingX);
-    setButtonPaddingY(DEFAULT_SETTINGS.buttonPaddingY);
-    setButtonBorderColor(DEFAULT_SETTINGS.buttonBorderColor);
-    setButtonBorderWidth(DEFAULT_SETTINGS.buttonBorderWidth);
-    setButtonBorderRadius(DEFAULT_SETTINGS.buttonBorderRadius);
-    setButtonBackgroundColor(DEFAULT_SETTINGS.buttonBackgroundColor);
-    setButtonHoverStyle(DEFAULT_SETTINGS.buttonHoverStyle);
-  }
-
   function handleSave() {
     setSaveState("saved");
     setSaveError(null);
@@ -145,7 +134,6 @@ export default function DashboardPage({
   }
 
   const selectInline = useCallback(() => setSelectedFrame("inline"), []);
-  const selectButton = useCallback(() => setSelectedFrame("button"), []);
   const closeInspector = useCallback(() => setSelectedFrame(null), []);
 
   useEffect(() => {
@@ -196,7 +184,6 @@ export default function DashboardPage({
           <p className={styles.sectionTitle}>Connections</p>
           <div className={widgetUiStyles.mainCol}>
             <ConnectionsSection incoming={connections.incoming} outgoing={connections.outgoing} />
-            <NetworkDirectory initialDirectory={directory} />
             <YourNetworkSection accepted={connections.accepted} />
           </div>
         </section>
@@ -208,7 +195,6 @@ export default function DashboardPage({
             containerRef={containerRef}
             selectedFrame={selectedFrame}
             onSelectInline={selectInline}
-            onSelectButton={selectButton}
             buttonStyle={{
               buttonFontFamily,
               buttonFontSize,
@@ -235,33 +221,6 @@ export default function DashboardPage({
           onShadowChange: handleShadowChange,
           onThemeChange: handleThemeChange,
           onReset: handleResetAppearance,
-        }}
-        buttonStyle={{
-          buttonFontFamily,
-          buttonFontSize,
-          buttonFontWeight,
-          buttonLetterSpacing,
-          buttonPaddingX,
-          buttonPaddingY,
-          buttonBorderColor,
-          buttonBorderWidth,
-          buttonBorderRadius,
-          buttonBackgroundColor,
-          buttonHoverStyle,
-        }}
-        buttonStyleActions={{
-          onFontFamilyChange: setButtonFontFamily,
-          onFontSizeChange: setButtonFontSize,
-          onFontWeightChange: setButtonFontWeight,
-          onLetterSpacingChange: setButtonLetterSpacing,
-          onPaddingXChange: setButtonPaddingX,
-          onPaddingYChange: setButtonPaddingY,
-          onBorderColorChange: setButtonBorderColor,
-          onBorderWidthChange: setButtonBorderWidth,
-          onBorderRadiusChange: setButtonBorderRadius,
-          onBackgroundColorChange: setButtonBackgroundColor,
-          onHoverStyleChange: setButtonHoverStyle,
-          onReset: handleResetButtonStyle,
         }}
         onSave={handleSave}
         saveState={saveState}
