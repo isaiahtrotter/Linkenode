@@ -45,9 +45,6 @@ export default function AddPlaceholderConnection() {
         {submitting ? "Adding…" : "Add"}
       </button>
       {error && <p className={styles.error}>{error}</p>}
-      <p className={styles.hint}>
-        We&apos;ll try to pull their name and photo from the link automatically.
-      </p>
     </form>
   );
 }

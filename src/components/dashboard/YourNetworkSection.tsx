@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  saveConnectionNote,
-  saveEndorsement,
-  searchProfilesByName,
-  inviteMergeConnection,
-  dismissMergeSuggestion,
-  deletePlaceholderConnection,
-  removeConnection,
-  type SearchResult,
-} from "@/app/dashboard/connections/actions";
+import { removeConnection } from "@/app/dashboard/connections/actions";
 import { MiniAvatar } from "./ConnectionsSection";
 import ConfirmDialog from "./ConfirmDialog";
+import ConnectionProfileModal from "./ConnectionProfileModal";
 import { useToast } from "./ToastProvider";
-import { updateConnectionEndorsementPreview, updateConnectionPreview } from "@/lib/widgetLiveUpdate";
 import styles from "./widget-ui.module.css";
 
 type OtherProfile =
@@ -33,10 +24,8 @@ type AcceptedRow = {
   pendingMergeTarget?: MergeSuggestion;
 };
 
-const NOTE_MAX_LENGTH = 80;
 const FILTER_THRESHOLD = 6;
 const VISIBLE_CAP = 8;
-const MERGE_SEARCH_DEBOUNCE_MS = 200;
 
 export default function YourNetworkSection({
   accepted,
@@ -49,37 +38,11 @@ export default function YourNetworkSection({
   const toast = useToast();
   const [acceptedState, setAcceptedState] = useState(accepted);
   const [query, setQuery] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-
-  const [mergePickerForRequestId, setMergePickerForRequestId] = useState<string | null>(null);
-  const [mergeQuery, setMergeQuery] = useState("");
-  const [mergeResults, setMergeResults] = useState<SearchResult[]>([]);
-  const [mergeSearching, setMergeSearching] = useState(false);
-  const [mergeActionError, setMergeActionError] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ requestId: string; name: string } | null>(null);
-  const mergeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setAcceptedState(accepted), [accepted]);
-
-  useEffect(() => {
-    if (mergeDebounceRef.current) clearTimeout(mergeDebounceRef.current);
-    const trimmed = mergeQuery.trim();
-    if (!trimmed) {
-      setMergeResults([]);
-      setMergeSearching(false);
-      return;
-    }
-    setMergeSearching(true);
-    mergeDebounceRef.current = setTimeout(async () => {
-      const { results } = await searchProfilesByName(trimmed);
-      setMergeResults(results);
-      setMergeSearching(false);
-    }, MERGE_SEARCH_DEBOUNCE_MS);
-    return () => {
-      if (mergeDebounceRef.current) clearTimeout(mergeDebounceRef.current);
-    };
-  }, [mergeQuery]);
 
   const filtered = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
@@ -91,52 +54,7 @@ export default function YourNetworkSection({
 
   const visible = showAll ? filtered : filtered.slice(0, VISIBLE_CAP);
   const hiddenCount = filtered.length - visible.length;
-
-  function openMergePicker(requestId: string) {
-    setMergePickerForRequestId(requestId);
-    setMergeQuery("");
-    setMergeResults([]);
-    setMergeActionError(null);
-  }
-
-  function handleMerge(placeholderId: string, targetId: string) {
-    setMergePickerForRequestId(null);
-    // Doesn't merge instantly, so the row stays put -- this just sends a
-    // connection invitation. It'll actually fold in once they accept it
-    // (or immediately if the two accounts already happen to be connected).
-    inviteMergeConnection(placeholderId, targetId)
-      .then((result) => {
-        if (result.error) {
-          setMergeActionError(result.error);
-        } else {
-          toast("Invitation sent");
-        }
-        router.refresh();
-      })
-      .catch((err) => {
-        setMergeActionError(err instanceof Error ? err.message : "Couldn't send invitation.");
-        router.refresh();
-      });
-  }
-
-  function handleDeletePlaceholder(requestId: string, placeholderId: string) {
-    setAcceptedState((prev) => prev.filter((r) => r.request.id !== requestId));
-    deletePlaceholderConnection(placeholderId)
-      .then((result) => {
-        if (result.error) setMergeActionError(result.error);
-        router.refresh();
-      })
-      .catch((err) => {
-        setMergeActionError(err instanceof Error ? err.message : "Couldn't delete.");
-        router.refresh();
-      });
-  }
-
-  function handleDismissSuggestion(placeholderId: string, targetId: string) {
-    dismissMergeSuggestion(placeholderId, targetId)
-      .then(() => router.refresh())
-      .catch(() => router.refresh());
-  }
+  const selectedRow = acceptedState.find((r) => r.request.id === selectedRequestId) ?? null;
 
   function handleConfirmRemove() {
     if (!removeTarget) return;
@@ -146,7 +64,7 @@ export default function YourNetworkSection({
     removeConnection(requestId)
       .then(() => router.refresh())
       .catch((err) => {
-        setMergeActionError(err instanceof Error ? err.message : "Couldn't remove connection.");
+        toast(err instanceof Error ? err.message : "Couldn't remove connection.");
         router.refresh();
       });
   }
@@ -166,15 +84,14 @@ export default function YourNetworkSection({
       )}
 
       <div className={styles.networkGrid}>
-        {visible.map(({ request, other, note, endorsement, mergeSuggestion, pendingMergeTarget }) => {
-          const isOpen = expandedId === request.id;
+        {visible.map(({ request, other, note, endorsement }) => {
           const isPlaceholder = !!other && !other.user_id;
           return (
             <div key={request.id} className={styles.networkCard}>
               <button
                 type="button"
                 className={styles.networkCardHeader}
-                onClick={() => setExpandedId(isOpen ? null : request.id)}
+                onClick={() => setSelectedRequestId(request.id)}
               >
                 <span className={styles.searchDropdownIdentity}>
                   <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
@@ -188,182 +105,9 @@ export default function YourNetworkSection({
                       ★
                     </span>
                   )}
-                  <span className={styles.networkChevron}>{isOpen ? "−" : "+"}</span>
+                  <span className={styles.networkChevron}>›</span>
                 </span>
               </button>
-
-              {isOpen && (
-                <div className={styles.networkCardBody}>
-                  <input
-                    name="note"
-                    defaultValue={note}
-                    maxLength={NOTE_MAX_LENGTH}
-                    placeholder="How do you know them? (private)"
-                    className={styles.input}
-                    onChange={(e) => {
-                      if (other) updateConnectionPreview(other.id, { relationship: e.target.value });
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value;
-                      if (value === note) return;
-                      saveConnectionNote(request.id, value)
-                        .then(() => {
-                          toast("Saved");
-                          router.refresh();
-                        })
-                        .catch(() => toast("Couldn't save — try again"));
-                    }}
-                  />
-                  {other && (
-                    <input
-                      name="endorsement"
-                      defaultValue={endorsement}
-                      placeholder="Write a public recommendation…"
-                      className={styles.input}
-                      onChange={(e) =>
-                        updateConnectionEndorsementPreview(
-                          other.id,
-                          owner.id,
-                          owner.name,
-                          owner.avatar_url,
-                          e.target.value,
-                        )
-                      }
-                      onBlur={(e) => {
-                        const value = e.target.value;
-                        if (value === endorsement) return;
-                        saveEndorsement(other.id, value)
-                          .then(() => {
-                            toast("Saved");
-                            router.refresh();
-                          })
-                          .catch(() => toast("Couldn't save — try again"));
-                      }}
-                    />
-                  )}
-
-                  {!isPlaceholder && other && (
-                    <div style={{ marginTop: 4 }}>
-                      <button
-                        type="button"
-                        className={styles.smallLinkBtn}
-                        onClick={() =>
-                          setRemoveTarget({ requestId: request.id, name: other.name })
-                        }
-                      >
-                        Remove connection
-                      </button>
-                    </div>
-                  )}
-
-                  {isPlaceholder && other && (
-                    <div style={{ marginTop: 4 }}>
-                      {pendingMergeTarget && (
-                        <p className={styles.hint} style={{ margin: "0 0 8px" }}>
-                          {`Invitation sent to ${pendingMergeTarget.name} — waiting for them to accept.`}
-                        </p>
-                      )}
-
-                      {!pendingMergeTarget && mergeSuggestion && (
-                        <div className={styles.controlRow} style={{ marginBottom: 8 }}>
-                          <span className={styles.hint} style={{ margin: 0 }}>
-                            {`This might be ${mergeSuggestion.name} — they've since made a real account.`}
-                          </span>
-                          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                            <button
-                              type="button"
-                              className={styles.btnSecondary}
-                              onClick={() => handleMerge(other.id, mergeSuggestion.id)}
-                            >
-                              Merge
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.smallLinkBtn}
-                              onClick={() => handleDismissSuggestion(other.id, mergeSuggestion.id)}
-                            >
-                              Not them
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {!pendingMergeTarget && mergePickerForRequestId === request.id && (
-                        <div className={styles.searchWrap} style={{ marginBottom: 0 }}>
-                          <input
-                            value={mergeQuery}
-                            onChange={(e) => setMergeQuery(e.target.value)}
-                            placeholder="Search by name"
-                            className={styles.input}
-                            autoFocus
-                          />
-                          {mergeQuery.trim() && (
-                            <div
-                              className={styles.searchDropdown}
-                              style={{ position: "static", boxShadow: "none", marginTop: 4 }}
-                            >
-                              {mergeSearching && (
-                                <div className={styles.searchDropdownItem}>Searching…</div>
-                              )}
-                              {!mergeSearching && mergeResults.length === 0 && (
-                                <div className={styles.searchDropdownItem}>No matches.</div>
-                              )}
-                              {!mergeSearching &&
-                                mergeResults.map((r) => (
-                                  <div key={r.id} className={styles.searchDropdownItem}>
-                                    <span className={styles.searchDropdownIdentity}>
-                                      <MiniAvatar url={r.avatar_url} name={r.name} />
-                                      <span>{r.name}</span>
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className={styles.btnSecondary}
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => handleMerge(other.id, r.id)}
-                                    >
-                                      Merge
-                                    </button>
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            className={styles.smallLinkBtn}
-                            style={{ marginTop: 6 }}
-                            onClick={() => setMergePickerForRequestId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-
-                      <div style={{ display: "flex", gap: 12 }}>
-                        {!pendingMergeTarget && mergePickerForRequestId !== request.id && (
-                          <button
-                            type="button"
-                            className={styles.smallLinkBtn}
-                            onClick={() => openMergePicker(request.id)}
-                          >
-                            Merge into another profile…
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className={styles.smallLinkBtn}
-                          onClick={() => handleDeletePlaceholder(request.id, other.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-
-                      {mergeActionError && (
-                        <p className={styles.error}>{mergeActionError}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
@@ -381,6 +125,22 @@ export default function YourNetworkSection({
             Show {hiddenCount} more
           </button>
         </div>
+      )}
+
+      {selectedRow && (
+        <ConnectionProfileModal
+          row={selectedRow}
+          owner={owner}
+          onClose={() => setSelectedRequestId(null)}
+          onRequestRemove={(name) => {
+            setSelectedRequestId(null);
+            setRemoveTarget({ requestId: selectedRow.request.id, name });
+          }}
+          onDeleted={(requestId) => {
+            setSelectedRequestId(null);
+            setAcceptedState((prev) => prev.filter((r) => r.request.id !== requestId));
+          }}
+        />
       )}
 
       <ConfirmDialog

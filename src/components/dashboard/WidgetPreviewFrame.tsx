@@ -8,6 +8,53 @@ import styles from "./widget-ui.module.css";
 
 type Corner = "bottom-right" | "bottom-left";
 
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+// Renders the same snippet string as actual syntax-highlighted tokens
+// instead of one flat-colored blob -- the format is fixed (a single
+// <script> tag), so hand-tokenizing it is simpler than pulling in a
+// generic highlighter for one line of markup.
+function EmbedSnippet({
+  origin,
+  embedKey,
+  corner,
+}: {
+  origin: string;
+  embedKey: string;
+  corner: Corner;
+}) {
+  const attrs: Array<[string, string]> = [["data-embed-key", embedKey]];
+  if (corner !== "bottom-right") attrs.push(["data-corner", corner]);
+
+  return (
+    <>
+      <span className={styles.tokPunct}>{"<"}</span>
+      <span className={styles.tokTag}>script</span>{" "}
+      <span className={styles.tokAttr}>src</span>
+      <span className={styles.tokPunct}>=</span>
+      <span className={styles.tokString}>&quot;{origin}/widget.js&quot;</span>{" "}
+      {attrs.map(([name, value]) => (
+        <span key={name}>
+          <span className={styles.tokAttr}>{name}</span>
+          <span className={styles.tokPunct}>=</span>
+          <span className={styles.tokString}>&quot;{value}&quot;</span>{" "}
+        </span>
+      ))}
+      <span className={styles.tokAttr}>async</span>
+      <span className={styles.tokPunct}>{"></"}</span>
+      <span className={styles.tokTag}>script</span>
+      <span className={styles.tokPunct}>{">"}</span>
+    </>
+  );
+}
+
 // One shared graphic, mirrored via the black pill's x position, rather than
 // two near-duplicate SVGs -- bottom-left sits at x=10, bottom-right at
 // x=335 (the same numbers as the two designs this was built from).
@@ -67,7 +114,7 @@ export default function WidgetPreviewFrame({
   function copy() {
     navigator.clipboard.writeText(snippet);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function saveLabel() {
@@ -109,11 +156,6 @@ export default function WidgetPreviewFrame({
       </div>
 
       <div className={styles.buttonPreviewWrap}>
-        <div className={styles.buttonMimic}>
-          <LauncherIcon />
-          <span className={styles.buttonMimicLabel}>{labelDraft || label}</span>
-        </div>
-
         <div className={styles.inputWithCounter}>
           <input
             value={labelDraft}
@@ -126,6 +168,11 @@ export default function WidgetPreviewFrame({
           <span className={styles.inputCounter}>
             {labelDraft.length}/{BUTTON_LABEL_MAX_LENGTH}
           </span>
+        </div>
+
+        <div className={styles.buttonMimic}>
+          <LauncherIcon />
+          <span className={styles.buttonMimicLabel}>{labelDraft || label}</span>
         </div>
       </div>
 
@@ -156,10 +203,35 @@ export default function WidgetPreviewFrame({
           </div>
         </div>
 
-        <pre className={styles.snippet}>{snippet}</pre>
-        <button onClick={copy} className={styles.btnPrimary}>
-          {copied ? "Copied!" : "Copy to clipboard"}
-        </button>
+        <div
+          className={styles.snippetWrap}
+          onClick={copy}
+          role="button"
+          tabIndex={0}
+          aria-label="Copy embed code to clipboard"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              copy();
+            }
+          }}
+        >
+          <pre className={styles.snippet}>
+            <EmbedSnippet origin={origin} embedKey={embedKey} corner={corner} />
+          </pre>
+          <div
+            className={`${styles.snippetHoverOverlay} ${copied ? styles.snippetHoverOverlayActive : ""}`}
+          >
+            {copied ? (
+              <span>Copied to clipboard</span>
+            ) : (
+              <>
+                <CopyIcon />
+                <span>Copy to clipboard</span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

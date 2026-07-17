@@ -353,6 +353,119 @@
   align-items: center;
 }
 
+.profileDialogBox {
+  max-width: 420px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.profileDialogHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profileDialogAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: #f2f2f3;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: #8a8a8f;
+}
+
+.profileDialogIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.profileDialogName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #171717;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileDialogCloseBtn {
+  margin-left: auto;
+  border: none;
+  background: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #8a8a8f;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profileDialogCloseBtn:hover {
+  background: #f2f2f3;
+  color: #1c1c1a;
+}
+
+.profileDialogFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profileDialogFooter {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.textareaWithCounter {
+  position: relative;
+}
+
+.textareaWithCounter .textarea {
+  width: 100%;
+  padding-right: 46px;
+}
+
+.textarea {
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.13);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: #1c1c1a;
+  min-height: 88px;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea:hover {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.textareaWithCounter .inputCounter {
+  top: auto;
+  bottom: 8px;
+  transform: none;
+}
+
 .toast {
   position: fixed;
   bottom: 28px;
@@ -806,6 +919,20 @@
   background: #fff;
 }
 
+.snippetWrap {
+  position: relative;
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 0 0 10px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease;
+}
+
+.snippetWrap:hover {
+  outline-color: rgba(99, 91, 255, 0.35);
+}
+
 .snippet {
   background: #1c1c1a;
   color: #f1efe8;
@@ -814,9 +941,55 @@
   font-size: 12px;
   line-height: 1.6;
   overflow-x: auto;
-  margin: 0 0 10px;
+  margin: 0;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.snippetHoverOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    background-color 0.15s ease,
+    opacity 0.3s ease;
+}
+
+.snippetWrap:hover .snippetHoverOverlay {
+  background: rgba(28, 28, 26, 0.82);
+  opacity: 1;
+}
+
+.snippetHoverOverlayActive {
+  background: rgba(28, 28, 26, 0.82) !important;
+  opacity: 1 !important;
+}
+
+/* Syntax-highlighted embed snippet tokens */
+.tokPunct {
+  color: #7a7a80;
+}
+
+.tokTag {
+  color: #e06c75;
+}
+
+.tokAttr {
+  color: #d19a66;
+}
+
+.tokString {
+  color: #98c379;
 }
 
 /* Live preview panel */

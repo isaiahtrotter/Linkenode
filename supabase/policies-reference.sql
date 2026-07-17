@@ -365,3 +365,77 @@ begin
   end if;
 end;
 $$;
+
+-- 13. Deleting your own account has to leave zero trace in anyone else's
+--     network -- not just your own connection_requests, but the *other*
+--     party's private note about you too (connection_notes' own policy
+--     only lets its author manage it, so plain RLS as you can never
+--     delete their note). SECURITY DEFINER breaks that restriction safely:
+--     my_id is derived from auth.uid() inside the function, never taken
+--     as a parameter, so this can only ever delete the caller's own
+--     account. Called from deleteAccount in src/app/dashboard/actions.ts,
+--     which then also deletes the actual auth.users row via the admin API
+--     (see src/lib/supabase/admin.ts) if SUPABASE_SERVICE_ROLE_KEY is
+--     configured.
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  my_id uuid;
+  placeholder_id uuid;
+begin
+  my_id := public.my_profile_id();
+  if my_id is null then
+    raise exception 'No profile for this account';
+  end if;
+
+  -- Placeholders I added (never had their own account) -- delete
+  -- everything attached to each one, then the placeholder itself.
+  for placeholder_id in
+    select id from public.profiles where placeholder_owner_id = my_id
+  loop
+    delete from public.connection_notes
+      where connection_request_id in (
+        select id from public.connection_requests
+        where requester_id = placeholder_id or recipient_id = placeholder_id
+      );
+    delete from public.connection_requests
+      where requester_id = placeholder_id or recipient_id = placeholder_id;
+    delete from public.endorsements
+      where from_profile_id = placeholder_id or to_profile_id = placeholder_id;
+  end loop;
+
+  delete from storage.objects
+    where bucket_id = 'avatars'
+      and split_part(name, '.', 1) in (
+        select id::text from public.profiles where placeholder_owner_id = my_id
+      );
+  delete from public.profiles where placeholder_owner_id = my_id;
+
+  -- Every real connection I'm part of, including whichever note the OTHER
+  -- side wrote about me -- otherwise it'd be an orphaned row only they
+  -- could normally clean up.
+  delete from public.connection_notes
+    where connection_request_id in (
+      select id from public.connection_requests
+      where requester_id = my_id or recipient_id = my_id
+    );
+  delete from public.connection_requests
+    where requester_id = my_id or recipient_id = my_id;
+
+  delete from public.endorsements
+    where from_profile_id = my_id or to_profile_id = my_id;
+
+  delete from public.work_samples where profile_id = my_id;
+
+  delete from storage.objects
+    where bucket_id = 'avatars' and split_part(name, '.', 1) = my_id::text;
+  delete from storage.objects
+    where bucket_id = 'work-samples' and split_part(name, '/', 1) = my_id::text;
+
+  delete from public.profiles where id = my_id;
+end;
+$$;

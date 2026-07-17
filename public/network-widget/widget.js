@@ -359,7 +359,15 @@
           );
         }
 
-        var GRID = { spacingX: 95, spacingY: 90, offsetX: 60, offsetY: 70 };
+        // Up to 8 connections only ever fill ring 1 (see assignGridPositions
+        // below) -- pack them tighter and start zoomed in further so a small
+        // network still feels full rather than sparse. Once it spreads into
+        // ring 2+ (9 or more), fall back to the normal spacing/zoom.
+        var connectionCount = nodes.length - 1;
+        var isCompactNetwork = connectionCount > 0 && connectionCount <= 8;
+        var GRID = isCompactNetwork
+          ? { spacingX: 76, spacingY: 72, offsetX: 60, offsetY: 70 }
+          : { spacingX: 95, spacingY: 90, offsetX: 60, offsetY: 70 };
         var focusedId = "you",
           hoveredId = null;
         var camera, linkGroup, nodeGroup, bgRect;
@@ -484,7 +492,7 @@
         nodeGroup = camera.append("g");
         var patternDefs = svg.append("defs");
 
-        var zoomK = 1,
+        var zoomK = isCompactNetwork ? 1.25 : 1,
           ZOOM_MIN = 0.55,
           ZOOM_MAX = 1.25;
 
@@ -1569,6 +1577,13 @@
         if (mode === "inline") {
           widgetRoot.classList.add("expanded");
         }
+
+        // Every setting (label, corner, theme, icon) and the graph itself
+        // are now in their final state -- reveal it in one fade-up rather
+        // than showing the hardcoded markup defaults while this ran.
+        requestAnimationFrame(function () {
+          widgetRoot.classList.add("wt-ready");
+        });
 
         /* ---- floating launcher expand/collapse ---- */
         function expandWidget() {

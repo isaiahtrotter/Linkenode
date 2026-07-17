@@ -16,6 +16,18 @@ body { margin:0; font-family: -apple-system, sans-serif; }
         position: fixed;
         z-index: 1000;
         pointer-events: none;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s ease;
+      }
+      /* Added once __initNetworkWidget has fetched its data, applied every
+         setting (label/corner/theme/etc), and laid out the graph -- so the
+         embed never flashes its hardcoded defaults before settling. */
+      #widget-root.wt-ready {
+        opacity: 1;
+        transform: translateY(0);
       }
       #widget-root.corner-bottom-right {
         bottom: 24px;

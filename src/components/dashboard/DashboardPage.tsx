@@ -9,6 +9,7 @@ import ProfileSection from "./ProfileSection";
 import WorkSamplesSection from "./WorkSamplesSection";
 import ConnectionsSection from "./ConnectionsSection";
 import YourNetworkSection from "./YourNetworkSection";
+import DeleteAccountSection from "./DeleteAccountSection";
 import { ToastProvider } from "./ToastProvider";
 import styles from "./dashboard-page.module.css";
 import widgetUiStyles from "./widget-ui.module.css";
@@ -142,6 +143,13 @@ export default function DashboardPage({
               onSaveLabel={handleSaveLabel}
               onSaveTheme={handleSaveTheme}
             />
+          </section>
+
+          <section className={styles.section}>
+            <p className={styles.sectionTitle}>Danger zone</p>
+            <div className={widgetUiStyles.mainCol}>
+              <DeleteAccountSection profileName={profile.name} />
+            </div>
           </section>
         </main>
       </div>
