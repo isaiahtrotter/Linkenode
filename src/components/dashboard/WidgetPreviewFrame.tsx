@@ -155,13 +155,19 @@ export default function WidgetPreviewFrame({
 
   return (
     <div className={styles.mainCol}>
-      <div className={styles.previewCard}>
-        <NetworkWidget
-          key={networkVersion}
-          embedKey={embedKey}
-          mode="inline"
-          onThemeChange={handleThemeChange}
-        />
+      <div className={styles.card}>
+        <p className={styles.cardLabel}>Widget</p>
+        <p className={styles.hint} style={{ margin: "4px 0 16px" }}>
+          Light and dark mode here are applied as the default state when opened.
+        </p>
+        <div className={styles.previewCard}>
+          <NetworkWidget
+            key={networkVersion}
+            embedKey={embedKey}
+            mode="inline"
+            onThemeChange={handleThemeChange}
+          />
+        </div>
       </div>
 
       <div className={styles.buttonPreviewWrap}>
@@ -186,64 +192,60 @@ export default function WidgetPreviewFrame({
       </div>
 
       <div className={styles.card}>
-        <p className={styles.cardLabel}>Embed on your site</p>
-
-        <div className={styles.fieldRow}>
-          <span className={styles.label}>Corner</span>
-          <div className={styles.cornerPickerRow}>
-            <button
-              type="button"
-              className={`${styles.cornerOption} ${corner === "bottom-left" ? styles.cornerOptionActive : ""}`}
-              onClick={() => setCorner("bottom-left")}
-              aria-pressed={corner === "bottom-left"}
-              aria-label="Bottom left"
-            >
-              <CornerGraphic corner="bottom-left" />
-            </button>
-            <button
-              type="button"
-              className={`${styles.cornerOption} ${corner === "bottom-right" ? styles.cornerOptionActive : ""}`}
-              onClick={() => setCorner("bottom-right")}
-              aria-pressed={corner === "bottom-right"}
-              aria-label="Bottom right"
-            >
-              <CornerGraphic corner="bottom-right" />
-            </button>
-          </div>
-        </div>
-
-        <div
-          className={styles.snippetWrap}
-          onClick={copy}
-          onMouseEnter={() => setHovering(true)}
-          onMouseLeave={() => setHovering(false)}
-          role="button"
-          tabIndex={0}
-          aria-label="Copy embed code to clipboard"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              copy();
-            }
-          }}
-        >
-          <pre className={styles.snippet}>
-            <EmbedSnippet origin={origin} embedKey={embedKey} corner={corner} />
-          </pre>
-          <div
-            className={`${styles.snippetHoverOverlay} ${copied || hovering ? styles.snippetHoverOverlayActive : ""}`}
+        <p className={styles.cardLabel}>Button placement</p>
+        <div className={styles.cornerPickerRow}>
+          <button
+            type="button"
+            className={`${styles.cornerOption} ${corner === "bottom-left" ? styles.cornerOptionActive : ""}`}
+            onClick={() => setCorner("bottom-left")}
+            aria-pressed={corner === "bottom-left"}
+            aria-label="Bottom left"
           >
-            {copied ? (
-              <span>Copied to clipboard</span>
-            ) : (
-              hovering && (
-                <>
-                  <CopyIcon />
-                  <span>Copy to clipboard</span>
-                </>
-              )
-            )}
-          </div>
+            <CornerGraphic corner="bottom-left" />
+          </button>
+          <button
+            type="button"
+            className={`${styles.cornerOption} ${corner === "bottom-right" ? styles.cornerOptionActive : ""}`}
+            onClick={() => setCorner("bottom-right")}
+            aria-pressed={corner === "bottom-right"}
+            aria-label="Bottom right"
+          >
+            <CornerGraphic corner="bottom-right" />
+          </button>
+        </div>
+      </div>
+
+      <div
+        className={styles.snippetWrap}
+        onClick={copy}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        role="button"
+        tabIndex={0}
+        aria-label="Copy embed code to clipboard"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            copy();
+          }
+        }}
+      >
+        <pre className={styles.snippet}>
+          <EmbedSnippet origin={origin} embedKey={embedKey} corner={corner} />
+        </pre>
+        <div
+          className={`${styles.snippetHoverOverlay} ${copied || hovering ? styles.snippetHoverOverlayActive : ""}`}
+        >
+          {copied ? (
+            <span>Copied to clipboard</span>
+          ) : (
+            hovering && (
+              <>
+                <CopyIcon />
+                <span>Copy to clipboard</span>
+              </>
+            )
+          )}
         </div>
       </div>
     </div>
