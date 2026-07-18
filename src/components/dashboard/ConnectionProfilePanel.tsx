@@ -31,6 +31,7 @@ type AcceptedRow = {
 const NOTE_MAX_LENGTH = 60;
 const ENDORSEMENT_MAX_LENGTH = 1000;
 const MERGE_SEARCH_DEBOUNCE_MS = 200;
+const AUTOSAVE_DEBOUNCE_MS = 600;
 
 export default function ConnectionProfilePanel({
   row,
@@ -56,7 +57,6 @@ export default function ConnectionProfilePanel({
   useEffect(() => setNoteDraft(note), [note]);
   const [endorsementDraft, setEndorsementDraft] = useState(endorsement);
   useEffect(() => setEndorsementDraft(endorsement), [endorsement]);
-  const [saving, setSaving] = useState(false);
 
   const [mergePickerOpen, setMergePickerOpen] = useState(false);
   const [mergeQuery, setMergeQuery] = useState("");
@@ -64,8 +64,35 @@ export default function ConnectionProfilePanel({
   const [mergeSearching, setMergeSearching] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const mergeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noteSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endorsementSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isDirty = noteDraft !== note || (!!other && endorsementDraft !== endorsement);
+  function scheduleNoteSave(value: string) {
+    if (noteSaveTimerRef.current) clearTimeout(noteSaveTimerRef.current);
+    noteSaveTimerRef.current = setTimeout(() => {
+      noteSaveTimerRef.current = null;
+      saveConnectionNote(request.id, value)
+        .then(() => {
+          toast("Saved");
+          router.refresh();
+        })
+        .catch(() => toast("Couldn't save — try again"));
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }
+
+  function scheduleEndorsementSave(value: string) {
+    if (!other) return;
+    if (endorsementSaveTimerRef.current) clearTimeout(endorsementSaveTimerRef.current);
+    endorsementSaveTimerRef.current = setTimeout(() => {
+      endorsementSaveTimerRef.current = null;
+      saveEndorsement(other.id, value)
+        .then(() => {
+          toast("Saved");
+          router.refresh();
+        })
+        .catch(() => toast("Couldn't save — try again"));
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }
 
   useEffect(() => {
     if (mergeDebounceRef.current) clearTimeout(mergeDebounceRef.current);
@@ -86,14 +113,26 @@ export default function ConnectionProfilePanel({
     };
   }, [mergeQuery]);
 
-  // Closing without saving shouldn't leave the live widget preview showing
-  // typed-but-discarded text -- push the original values back over
-  // whatever the draft last pushed.
+  // Closing shouldn't lose whatever's mid-debounce -- flush it immediately
+  // rather than waiting for the timer (which would fire after the panel's
+  // already gone).
   function handleClose() {
-    if (other && isDirty) {
-      if (noteDraft !== note) updateConnectionPreview(other.id, { relationship: note });
-      if (endorsementDraft !== endorsement) {
-        updateConnectionEndorsementPreview(other.id, owner.id, owner.name, owner.avatar_url, endorsement);
+    if (noteSaveTimerRef.current) {
+      clearTimeout(noteSaveTimerRef.current);
+      noteSaveTimerRef.current = null;
+      if (noteDraft !== note) {
+        saveConnectionNote(request.id, noteDraft)
+          .then(() => router.refresh())
+          .catch(() => toast("Couldn't save — try again"));
+      }
+    }
+    if (endorsementSaveTimerRef.current) {
+      clearTimeout(endorsementSaveTimerRef.current);
+      endorsementSaveTimerRef.current = null;
+      if (other && endorsementDraft !== endorsement) {
+        saveEndorsement(other.id, endorsementDraft)
+          .then(() => router.refresh())
+          .catch(() => toast("Couldn't save — try again"));
       }
     }
     onClose();
@@ -109,23 +148,6 @@ export default function ConnectionProfilePanel({
     // over noteDraft/endorsementDraft/note/endorsement, all already current
     // each render; re-binding this listener every keystroke isn't needed.
   }, []);
-
-  async function handleSave() {
-    if (!isDirty) return;
-    setSaving(true);
-    try {
-      const tasks: Promise<unknown>[] = [];
-      if (noteDraft !== note) tasks.push(saveConnectionNote(request.id, noteDraft));
-      if (other && endorsementDraft !== endorsement) tasks.push(saveEndorsement(other.id, endorsementDraft));
-      await Promise.all(tasks);
-      toast("Saved");
-      router.refresh();
-    } catch {
-      toast("Couldn't save — try again");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   function openMergePicker() {
     setMergePickerOpen(true);
@@ -202,6 +224,7 @@ export default function ConnectionProfilePanel({
               onChange={(e) => {
                 setNoteDraft(e.target.value);
                 if (other) updateConnectionPreview(other.id, { relationship: e.target.value });
+                scheduleNoteSave(e.target.value);
               }}
             />
             <span className={styles.inputCounter}>
@@ -229,6 +252,7 @@ export default function ConnectionProfilePanel({
                     owner.avatar_url,
                     e.target.value,
                   );
+                  scheduleEndorsementSave(e.target.value);
                 }}
               />
               <span className={styles.inputCounter}>
@@ -237,15 +261,6 @@ export default function ConnectionProfilePanel({
             </div>
           </div>
         )}
-
-        <button
-          type="button"
-          className={styles.saveButton}
-          disabled={!isDirty || saving}
-          onClick={handleSave}
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
       </div>
 
       {!isPlaceholder && other && (
@@ -354,13 +369,15 @@ export default function ConnectionProfilePanel({
                 Merge existing profile
               </button>
             )}
-            <button
-              type="button"
-              className={styles.btnDanger}
-              onClick={() => onRequestDelete(other.name)}
-            >
-              Delete
-            </button>
+            {!mergePickerOpen && (
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={() => onRequestDelete(other.name)}
+              >
+                Delete
+              </button>
+            )}
           </div>
 
           {actionError && <p className={styles.error}>{actionError}</p>}

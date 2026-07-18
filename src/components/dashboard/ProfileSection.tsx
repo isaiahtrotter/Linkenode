@@ -46,8 +46,6 @@ export default function ProfileSection({ profile }: { profile: Profile }) {
 
   return (
     <div className={styles.card}>
-      <p className={styles.cardLabel}>Your profile</p>
-
       <AvatarUpload profileId={profile.id} currentUrl={profile.avatar_url} />
 
       <form ref={formRef} action={formAction}>

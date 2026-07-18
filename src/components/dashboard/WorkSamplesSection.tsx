@@ -152,7 +152,9 @@ export default function WorkSamplesSection({
 
   return (
     <div className={styles.card}>
-      <p className={styles.cardLabel}>Work samples</p>
+      <p className={styles.hint} style={{ margin: "0 0 16px" }}>
+        Drag a sample to reorder it. JPG, PNG, WEBP, or GIF. Max 5MB each.
+      </p>
 
       <div className={styles.sampleGrid}>
         {Array.from({ length: MAX_SAMPLES }).map((_, index) => {
@@ -229,9 +231,6 @@ export default function WorkSamplesSection({
         })}
       </div>
 
-      <p className={styles.hint} style={{ margin: 0 }}>
-        Drag a sample to reorder it. JPG, PNG, WEBP, or GIF. Max 5MB each.
-      </p>
       {error && <p className={styles.error}>{error}</p>}
     </div>
   );

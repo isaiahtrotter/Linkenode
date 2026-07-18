@@ -164,8 +164,8 @@ export default function WidgetPreviewFrame({
   return (
     <div className={styles.mainCol}>
       <div className={styles.card}>
-        <p className={styles.cardLabel}>Widget</p>
-        <p className={styles.hint} style={{ margin: "4px 0 16px" }}>
+        <p className={styles.cardLabel} style={{ marginBottom: 4 }}>Widget</p>
+        <p className={styles.hint} style={{ margin: "0 0 16px" }}>
           Light and dark mode here are applied as the default state when opened.
         </p>
         <NetworkWidget
