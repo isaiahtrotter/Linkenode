@@ -139,8 +139,13 @@
   cursor: pointer;
   border-radius: 10px;
   overflow: hidden;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  /* Width/offset stay identical across every state (only outline-color
+     changes) -- when they used to differ between the active and inactive
+     rules, deselecting a corner made the outline's width/offset snap
+     instantly while just the color faded, reading as a flash of selection
+     styling on the button you just clicked away from. */
+  outline: 1px solid transparent;
+  outline-offset: -1px;
   transition: outline-color 0.15s ease;
   line-height: 0;
 }
@@ -151,10 +156,13 @@
   height: auto;
 }
 
+.cornerOption:hover {
+  outline-color: rgba(0, 0, 0, 0.25);
+}
+
 .cornerOptionActive,
 .cornerOptionActive:hover {
-  outline: 1px solid #000;
-  outline-offset: -1px;
+  outline-color: #000;
 }
 
 .fieldRowGroup {
@@ -649,7 +657,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin: 0 0 10px;
 }
 
 .sampleThumb {
