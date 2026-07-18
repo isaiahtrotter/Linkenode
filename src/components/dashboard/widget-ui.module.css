@@ -146,7 +146,7 @@
      styling on the button you just clicked away from. */
   outline: 1px solid transparent;
   outline-offset: -1px;
-  transition: outline-color 0.15s ease, filter 0.15s ease;
+  transition: outline-color 0.15s ease;
   line-height: 0;
 }
 
@@ -156,8 +156,33 @@
   height: auto;
 }
 
-.cornerOption:hover {
-  filter: brightness(0.92);
+/* Only the gray wireframe elements darken on hover -- the white background
+   stays white. */
+.cornerGraphicGray {
+  transition: fill 0.15s ease;
+}
+
+.cornerGraphicGrayStroke {
+  transition: stroke 0.15s ease;
+}
+
+.cornerOption:hover .cornerGraphicGray {
+  fill: #cfcfcf;
+}
+
+.cornerOption:hover .cornerGraphicGrayStroke {
+  stroke: #cfcfcf;
+}
+
+/* The pill representing where the button will appear: lighter/muted on the
+   deselected option, solid black only on the one that's actually chosen. */
+.cornerGraphicPill {
+  fill: #8a8a8f;
+  transition: fill 0.15s ease;
+}
+
+.cornerOptionActive .cornerGraphicPill {
+  fill: #000;
 }
 
 .cornerOptionActive,

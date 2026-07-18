@@ -62,17 +62,26 @@ function CornerGraphic({ corner }: { corner: Corner }) {
   const buttonX = corner === "bottom-left" ? 10 : 335;
   return (
     <svg viewBox="0 0 402 270" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="400" height="268" rx="10" fill="white" />
-      <rect x="1" y="1" width="400" height="268" rx="10" stroke="#E5E5E5" strokeWidth="2" />
-      <rect y="176" width="112" height="94" fill="#E5E5E5" />
-      <rect y="45" width="112" height="128" fill="#E5E5E5" />
-      <rect x="115" y="45" width="287" height="225" fill="#E5E5E5" />
-      <rect x={buttonX} y="240" width="56" height="20" rx="7" fill="black" />
-      <rect x="10" y="14" width="14" height="14" rx="7" fill="#E5E5E5" />
-      <rect x="223" y="18.5" width="31" height="5" rx="2.5" fill="#E5E5E5" />
-      <rect x="264" y="18.5" width="29" height="5" rx="2.5" fill="#E5E5E5" />
-      <rect x="303" y="18.5" width="43" height="5" rx="2.5" fill="#E5E5E5" />
-      <rect x="356" y="18.5" width="35" height="5" rx="2.5" fill="#E5E5E5" />
+      <rect x="1" y="1" width="400" height="268" rx="11" fill="white" />
+      <rect
+        x="1"
+        y="1"
+        width="400"
+        height="268"
+        rx="11"
+        stroke="#E5E5E5"
+        strokeWidth="2"
+        className={styles.cornerGraphicGrayStroke}
+      />
+      <rect y="176" width="112" height="94" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect y="45" width="112" height="128" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x="115" y="45" width="287" height="225" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x={buttonX} y="240" width="56" height="20" rx="7" className={styles.cornerGraphicPill} />
+      <rect x="10" y="14" width="14" height="14" rx="7" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x="223" y="18.5" width="31" height="5" rx="2.5" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x="264" y="18.5" width="29" height="5" rx="2.5" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x="303" y="18.5" width="43" height="5" rx="2.5" fill="#E5E5E5" className={styles.cornerGraphicGray} />
+      <rect x="356" y="18.5" width="35" height="5" rx="2.5" fill="#E5E5E5" className={styles.cornerGraphicGray} />
     </svg>
   );
 }
