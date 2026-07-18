@@ -177,7 +177,7 @@
 /* The pill representing where the button will appear: lighter/muted on the
    deselected option, solid black only on the one that's actually chosen. */
 .cornerGraphicPill {
-  fill: #8a8a8f;
+  fill: #b3b3b3;
   transition: fill 0.15s ease;
 }
 
