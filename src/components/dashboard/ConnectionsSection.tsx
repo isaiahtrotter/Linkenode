@@ -192,19 +192,6 @@ export default function ConnectionsSection({
                   </button>
                 </div>
                 {addError && <p className={styles.error}>{addError}</p>}
-                <button
-                  type="button"
-                  className={styles.smallLinkBtn}
-                  style={{ alignSelf: "flex-start" }}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    setCreating(false);
-                    setLink("");
-                    setAddError(null);
-                  }}
-                >
-                  Back to search
-                </button>
               </form>
             ) : (
               <>
