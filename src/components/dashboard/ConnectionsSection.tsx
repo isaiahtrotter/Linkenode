@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   searchProfilesByName,
   sendConnectionRequest,
   cancelConnectionRequest,
   respondToRequest,
+  addPlaceholderConnection,
   type SearchResult,
 } from "@/app/dashboard/connections/actions";
-import AddPlaceholderConnection from "./AddPlaceholderConnection";
 import styles from "./widget-ui.module.css";
 
 type OtherProfile = { id: string; name: string; avatar_url: string | null } | undefined;
@@ -46,6 +47,15 @@ export default function ConnectionsSection({
   const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSeq = useRef(0);
+
+  // "Add without an account" -- surfaced only once a name search comes up
+  // empty, rather than as its own separate flow next to this one. The
+  // typed name is never sent along with it: detection comes entirely from
+  // the pasted link's own metadata (see addPlaceholderConnection), so
+  // there's nothing here to save except the link itself.
+  const [link, setLink] = useState("");
+  const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => setIncomingState(incoming), [incoming]);
   useEffect(() => setOutgoingState(outgoing), [outgoing]);
@@ -112,140 +122,179 @@ export default function ConnectionsSection({
     });
   }
 
+  async function handleAddPlaceholder(e: FormEvent) {
+    e.preventDefault();
+    setAddSubmitting(true);
+    setAddError(null);
+
+    const result = await addPlaceholderConnection({ link });
+    setAddSubmitting(false);
+
+    if (result.error) {
+      setAddError(result.error);
+      return;
+    }
+
+    setLink("");
+    setQuery("");
+    router.refresh();
+  }
+
+  const trimmedQuery = query.trim();
+  const showAddWithoutAccount = !!trimmedQuery && !isSearching && !searchError && results.length === 0;
+
   return (
-    <div className={styles.twoCardRow}>
-      <div className={styles.card}>
-        <p className={styles.cardLabel}>Add without an account</p>
-        <AddPlaceholderConnection />
-      </div>
+    <div className={styles.card}>
+      <p className={styles.cardLabel}>Add a connection</p>
 
-      <div className={styles.card}>
-        <p className={styles.cardLabel}>Add an existing account</p>
-
-        <div className={styles.searchWrap}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setIsOpen(true)}
-            onBlur={() => setTimeout(() => setIsOpen(false), 150)}
-            placeholder="Search by name"
-            className={styles.input}
-          />
-          {isOpen && query.trim() && (
-            <div className={styles.searchDropdown}>
-              {isSearching && <div className={styles.searchDropdownItem}>Searching…</div>}
-              {!isSearching && searchError && (
-                <div className={styles.searchDropdownItem}>{searchError}</div>
-              )}
-              {!isSearching && !searchError && results.length === 0 && (
-                <div className={styles.searchDropdownItem}>No matches.</div>
-              )}
-              {!isSearching &&
-                results.map((r, index) => (
-                  <div
-                    key={r.id}
-                    className={styles.searchDropdownItem}
-                    style={{ animationDelay: `${Math.min(index, 6) * 25}ms` }}
-                  >
-                    <span className={styles.searchDropdownIdentity}>
-                      <MiniAvatar url={r.avatar_url} name={r.name} />
-                      <span>{r.name}</span>
-                    </span>
-                    {r.status === "not_connected" && (
-                      <button
-                        type="button"
-                        className={styles.btnSecondary}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handleSendRequest(r.id)}
-                      >
-                        Send request
-                      </button>
-                    )}
-                    {r.status === "pending_outgoing" && (
-                      <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
-                    )}
-                    {r.status === "pending_incoming" && (
-                      <span className={`${styles.badge} ${styles.badgeIncoming}`}>
-                        Wants to connect
-                      </span>
-                    )}
-                    {r.status === "connected" && (
-                      <span className={`${styles.badge} ${styles.badgeConnected}`}>Connected</span>
-                    )}
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {actionError && <p className={styles.error}>{actionError}</p>}
-
-        {incomingState.length > 0 && (
-          <>
-            <p className={styles.cardLabel} style={{ marginTop: 20 }}>
-              Incoming requests
-            </p>
-            <ul className={styles.list}>
-              {incomingState.map(({ request, other }) => (
-                <li key={request.id} className={styles.row}>
+      <div className={styles.searchWrap}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+          placeholder="Search by name"
+          className={styles.input}
+          style={{ width: "100%" }}
+        />
+        {isOpen && trimmedQuery && (
+          <div className={styles.searchDropdown}>
+            {isSearching && <div className={styles.searchDropdownItem}>Searching…</div>}
+            {!isSearching && searchError && (
+              <div className={styles.searchDropdownItem}>{searchError}</div>
+            )}
+            {!isSearching && !searchError && results.length === 0 && (
+              <div className={styles.searchDropdownItem}>No matches for “{trimmedQuery}”.</div>
+            )}
+            {!isSearching &&
+              results.map((r, index) => (
+                <div
+                  key={r.id}
+                  className={styles.searchDropdownItem}
+                  style={{ animationDelay: `${Math.min(index, 6) * 25}ms` }}
+                >
                   <span className={styles.searchDropdownIdentity}>
-                    <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
-                    <span>{other?.name ?? "Unknown"}</span>
+                    <MiniAvatar url={r.avatar_url} name={r.name} />
+                    <span>{r.name}</span>
                   </span>
-                  <div className={styles.rowActions}>
+                  {r.status === "not_connected" && (
                     <button
                       type="button"
                       className={styles.btnSecondary}
-                      onClick={() => handleAccept(request.id)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleSendRequest(r.id)}
                     >
-                      Accept
+                      Send request
                     </button>
-                    <button
-                      type="button"
-                      className={styles.smallLinkBtn}
-                      onClick={() => handleDecline(request.id)}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {outgoingState.length > 0 && (
-          <>
-            <p className={styles.cardLabel} style={{ marginTop: 20 }}>
-              Outgoing requests
-            </p>
-            <ul className={styles.list}>
-              {outgoingState.map(({ request, other }) => (
-                <li key={request.id} className={styles.row}>
-                  <span className={styles.searchDropdownIdentity}>
-                    <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
-                    <span>{other?.name ?? "Unknown"}</span>
-                  </span>
-                  <div className={styles.rowActions}>
+                  )}
+                  {r.status === "pending_outgoing" && (
                     <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
-                    <button
-                      type="button"
-                      className={styles.smallLinkBtn}
-                      onClick={() => handleCancel(request.id)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </li>
+                  )}
+                  {r.status === "pending_incoming" && (
+                    <span className={`${styles.badge} ${styles.badgeIncoming}`}>
+                      Wants to connect
+                    </span>
+                  )}
+                  {r.status === "connected" && (
+                    <span className={`${styles.badge} ${styles.badgeConnected}`}>Connected</span>
+                  )}
+                </div>
               ))}
-            </ul>
-          </>
-        )}
-
-        {incomingState.length === 0 && outgoingState.length === 0 && (
-          <p className={styles.emptyState}>No pending requests.</p>
+          </div>
         )}
       </div>
+
+      {showAddWithoutAccount && (
+        <form onSubmit={handleAddPlaceholder} className={styles.fieldRow} style={{ marginTop: 10 }}>
+          <span className={styles.hint} style={{ margin: 0 }}>
+            Can&apos;t find them? Add them without an account — paste a link to their work:
+          </span>
+          <input
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="Twitter, Behance, Dribbble, anything"
+            className={styles.input}
+            required
+          />
+          <button
+            type="submit"
+            className={styles.btnSecondary}
+            disabled={addSubmitting}
+            style={{ alignSelf: "flex-start" }}
+          >
+            {addSubmitting ? "Adding…" : "Add"}
+          </button>
+          {addError && <p className={styles.error}>{addError}</p>}
+        </form>
+      )}
+
+      {actionError && <p className={styles.error}>{actionError}</p>}
+
+      {incomingState.length > 0 && (
+        <>
+          <p className={styles.cardLabel} style={{ marginTop: 20 }}>
+            Incoming requests
+          </p>
+          <ul className={styles.list}>
+            {incomingState.map(({ request, other }) => (
+              <li key={request.id} className={styles.row}>
+                <span className={styles.searchDropdownIdentity}>
+                  <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
+                  <span>{other?.name ?? "Unknown"}</span>
+                </span>
+                <div className={styles.rowActions}>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    onClick={() => handleAccept(request.id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.smallLinkBtn}
+                    onClick={() => handleDecline(request.id)}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {outgoingState.length > 0 && (
+        <>
+          <p className={styles.cardLabel} style={{ marginTop: 20 }}>
+            Outgoing requests
+          </p>
+          <ul className={styles.list}>
+            {outgoingState.map(({ request, other }) => (
+              <li key={request.id} className={styles.row}>
+                <span className={styles.searchDropdownIdentity}>
+                  <MiniAvatar url={other?.avatar_url} name={other?.name ?? "?"} />
+                  <span>{other?.name ?? "Unknown"}</span>
+                </span>
+                <div className={styles.rowActions}>
+                  <span className={`${styles.badge} ${styles.badgePending}`}>Pending</span>
+                  <button
+                    type="button"
+                    className={styles.smallLinkBtn}
+                    onClick={() => handleCancel(request.id)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {incomingState.length === 0 && outgoingState.length === 0 && (
+        <p className={styles.emptyState}>No pending requests.</p>
+      )}
     </div>
   );
 }
