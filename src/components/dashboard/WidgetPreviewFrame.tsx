@@ -62,13 +62,13 @@ function CornerGraphic({ corner }: { corner: Corner }) {
   const buttonX = corner === "bottom-left" ? 10 : 335;
   return (
     <svg viewBox="0 0 402 270" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="400" height="268" rx="11" fill="white" />
+      <rect x="1" y="1" width="400" height="268" rx="12" fill="white" />
       <rect
         x="1"
         y="1"
         width="400"
         height="268"
-        rx="11"
+        rx="12"
         stroke="#E5E5E5"
         strokeWidth="2"
         className={styles.cornerGraphicGrayStroke}
