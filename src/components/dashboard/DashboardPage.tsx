@@ -97,7 +97,7 @@ export default function DashboardPage({
                 fixed 26px-tall header logo isn't worth next/image's
                 overhead (remote loader config, layout-shift machinery)
                 for a single static asset. */}
-            <img src="/linkenode-logo.png" alt="linkenode" width={211} height={26} />
+            <img src="/linkenode-logo.png" alt="linkenode" width={130} height={16} />
           </div>
           <form action={signOut}>
             <button type="submit" className={styles.signOutBtn} aria-label="Sign out">
