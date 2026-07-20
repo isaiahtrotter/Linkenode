@@ -64,11 +64,17 @@ declare global {
 function NetworkWidget({
   embedKey,
   mode = "floating",
+  demoData,
   onReady,
   onThemeChange,
 }: {
   embedKey: string;
   mode?: "floating" | "inline";
+  // Pre-built { profile, connections } data, in the exact shape
+  // fetchWidgetData resolves to -- skips the live Supabase fetch entirely.
+  // Used by the marketing page's demo, which has no real embed_key to fetch
+  // against.
+  demoData?: unknown;
   onReady?: () => void;
   onThemeChange?: (theme: "light" | "dark") => void;
 }) {
@@ -81,7 +87,7 @@ function NetworkWidget({
 
     let cancelled = false;
 
-    Promise.all([fetchWidgetData(embedKey), import("d3")])
+    Promise.all([demoData ? Promise.resolve(demoData) : fetchWidgetData(embedKey), import("d3")])
       .then(([widgetData, d3]) => {
         if (cancelled) return;
         window.d3 = d3;
@@ -114,7 +120,7 @@ function NetworkWidget({
     // is only read once at mount (script.onload fires a single time, guarded
     // by initialized.current above); re-running this effect on every
     // identity change would re-fetch and re-inject the whole widget script.
-  }, [embedKey, mode, onReady]);
+  }, [embedKey, mode, onReady, demoData]);
 
   if (error) {
     return <p style={{ color: "#a33", fontSize: 13 }}>Couldn&apos;t load network preview: {error}</p>;

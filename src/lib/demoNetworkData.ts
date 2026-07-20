@@ -1,0 +1,95 @@
+// Fake profile + connections in the exact shape fetchWidgetData resolves to
+// -- fed straight into the real widget engine via NetworkWidget's demoData
+// prop. The signed-out marketing page has no live embed_key or Supabase row
+// to fetch, so this stands in for it.
+export const DEMO_WIDGET_DATA = {
+  profile: {
+    name: "Jordan Lee",
+    bio: "Product designer specializing in fintech and B2B dashboards.",
+    website: "jordanlee.design",
+    avatar_url: null,
+    widget_settings: { theme: "light", corner: "bottom-left", label: "View My Network" },
+    workSamples: [],
+    endorsements: [
+      {
+        id: "e1",
+        fromId: "maya",
+        fromName: "Maya Chen",
+        fromAvatarUrl: null,
+        text: "Jordan's eye for detail elevated every screen we shipped together.",
+      },
+      {
+        id: "e2",
+        fromId: "sam",
+        fromName: "Sam Okafor",
+        fromAvatarUrl: null,
+        text: "One of the few designers who can also talk through the engineering tradeoffs.",
+      },
+    ],
+  },
+  connections: [
+    {
+      id: "maya",
+      name: "Maya Chen",
+      bio: "Senior Product Designer at Notion.",
+      website: "mayachen.design",
+      avatar_url: null,
+      relationship: "Designed the onboarding flow together at Notion.",
+      endorsesOwner: true,
+      endorsements: [
+        {
+          id: "e3",
+          fromId: "you",
+          fromName: "Jordan Lee",
+          fromAvatarUrl: null,
+          text: "Maya elevated every project we worked on together — impeccable taste.",
+        },
+      ],
+      workSamples: [],
+    },
+    {
+      id: "sam",
+      name: "Sam Okafor",
+      bio: "Frontend Engineer at Vercel.",
+      website: "samokafor.dev",
+      avatar_url: null,
+      relationship: "Built the component library together at Vercel.",
+      endorsesOwner: true,
+      endorsements: [],
+      workSamples: [],
+    },
+    {
+      id: "priya",
+      name: "Priya Nair",
+      bio: "Art Director, freelance.",
+      website: "priyanair.co",
+      avatar_url: null,
+      relationship: "Collaborated on brand identity for two startups.",
+      endorsesOwner: false,
+      endorsements: [],
+      workSamples: [],
+    },
+    {
+      id: "leo",
+      name: "Leo Fischer",
+      bio: "UX Researcher at Linear.",
+      website: "leofischer.com",
+      avatar_url: null,
+      relationship: "Ran usability studies together at Linear.",
+      endorsesOwner: true,
+      endorsements: [],
+      workSamples: [],
+    },
+    {
+      id: "ava",
+      name: "Ava Torres",
+      bio: "Illustrator & visual designer.",
+      website: "avatorres.art",
+      avatar_url: null,
+      relationship: "Partnered on editorial illustration for a launch campaign.",
+      endorsesOwner: false,
+      endorsements: [],
+      workSamples: [],
+    },
+  ],
+};

@@ -1628,6 +1628,14 @@
         // automatically by public/widget.js), or custom code via
         // document.dispatchEvent(new CustomEvent("linkenode:open")).
         document.addEventListener("linkenode:open", expandWidget);
+        document.addEventListener("linkenode:close", collapseWidget);
+        document.addEventListener("linkenode:toggle", function () {
+          if (widgetRoot.classList.contains("expanded")) {
+            collapseWidget();
+          } else {
+            expandWidget();
+          }
+        });
 
         launcherBtn.addEventListener("pointerup", function (e) {
           e.stopPropagation();
