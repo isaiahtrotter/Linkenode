@@ -1,0 +1,269 @@
+.laptopWrap {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.laptop {
+  width: min(760px, 82vw);
+  max-height: 100%;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #1c1c1a;
+  border-radius: 14px;
+  padding: 2.4% 2.4% 3.4%;
+  box-sizing: border-box;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
+}
+
+.camera {
+  position: absolute;
+  top: 1.1%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #3a3a38;
+}
+
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 4.5%;
+  box-sizing: border-box;
+  gap: 6%;
+}
+
+.base {
+  position: relative;
+  width: 108%;
+  margin: 0 -4%;
+  height: 14px;
+  background: linear-gradient(#e4e4e2, #c7c7c5);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.12);
+}
+
+.notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 8px;
+  background: #fafaf8;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Wireframe portfolio content inside the screen */
+
+.portfolioNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.navMark {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #1c1c1a;
+}
+
+.navLinks {
+  display: flex;
+  gap: 10px;
+}
+
+.navLine {
+  width: 24px;
+  height: 5px;
+  border-radius: 3px;
+  background: #e5e5e5;
+}
+
+.portfolioHero {
+  display: flex;
+  flex-direction: column;
+  gap: 8%;
+  flex-shrink: 0;
+}
+
+.blockLg {
+  width: 62%;
+  height: 11%;
+  min-height: 10px;
+  border-radius: 4px;
+  background: #ececec;
+}
+
+.blockSm {
+  width: 42%;
+  height: 6%;
+  min-height: 6px;
+  border-radius: 3px;
+  background: #eeeeee;
+}
+
+.portfolioGrid {
+  display: flex;
+  gap: 6%;
+  flex: 1;
+  min-height: 0;
+}
+
+.gridItem {
+  flex: 1;
+  border-radius: 6px;
+  background: #f0f0f0;
+}
+
+/* Launcher pill -- matches the real embed's .launcher styling */
+
+.launcher {
+  position: absolute;
+  bottom: 4%;
+  right: 4%;
+  padding: 7px 11px;
+  border-radius: 9px;
+  background: #ffffff;
+  border: 1px solid #c5c5c5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.launcher:hover {
+  transform: translateY(-2px);
+}
+
+.launcherHidden {
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+}
+
+.launcherLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.72);
+}
+
+/* Expanded network panel */
+
+.panel {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  width: 78%;
+  height: 84%;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: scale(0.9);
+  filter: blur(4px);
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
+  box-sizing: border-box;
+  padding: 5%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelOpen {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+  pointer-events: auto;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.panelTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8a8f;
+}
+
+.closeBtn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: #f2f2f0;
+  color: #6a6a68;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.closeBtn:hover {
+  background: #e7e7e4;
+}
+
+.graph {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.edge {
+  stroke: #dcdcda;
+  stroke-width: 2;
+}
+
+.edgeAccent {
+  stroke: #635bff;
+  stroke-width: 2;
+}
+
+.node {
+  fill: #ffffff;
+  stroke: #c5c5c5;
+  stroke-width: 1.5;
+}
+
+.nodeOwner {
+  fill: #1c1c1a;
+}
+
+.nodeAccent {
+  fill: #635bff;
+}
+
+@media (max-width: 560px) {
+  .laptop {
+    width: 92vw;
+  }
+}
