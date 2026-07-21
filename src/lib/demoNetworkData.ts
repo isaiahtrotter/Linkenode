@@ -3,43 +3,121 @@
 // prop. The signed-out marketing page has no live embed_key or Supabase row
 // to fetch, so this stands in for it.
 
-// Simple abstract "designed placeholder" thumbnails for work samples -- flat
-// SVGs (as data URIs, so no network dependency) rather than photos, matching
-// the wireframe aesthetic used everywhere else on this page.
+// Simple UI wireframes for work samples -- actual mockups of screens (a
+// landing page, a mobile app, a dashboard, etc.), not abstract shapes, as
+// flat SVGs (data URIs, so no network dependency). One (the messaging app,
+// SAMPLES[7]) genuinely animates via native SVG <animate> -- a small
+// pulsing "typing…" indicator -- so it's a real (if tiny) moving image, not
+// just a static frame wearing a ".gif" label.
 function placeholder(bg: string, shapes: string): string {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='480' height='360'><rect width='480' height='360' fill='${bg}'/>${shapes}</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+// A few grid-shaped wireframes (calendar, chart bars) are built from repeated
+// cells -- generated here instead of hand-typed to avoid transcription
+// errors across dozens of near-identical <rect> tags.
+function calendarWireframe(accent: string): string {
+  const cells: string[] = [];
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 7; col++) {
+      const x = 20 + col * 62;
+      const y = 55 + row * 62;
+      cells.push(`<rect x='${x}' y='${y}' width='54' height='54' rx='8' fill='${accent}' opacity='0.14'/>`);
+    }
+  }
+  const events: Array<[number, number]> = [
+    [0, 1],
+    [1, 3],
+    [2, 5],
+  ];
+  events.forEach(([row, col]) => {
+    const x = 20 + col * 62 + 6;
+    const y = 55 + row * 62 + 38;
+    cells.push(`<rect x='${x}' y='${y}' width='42' height='10' rx='4' fill='${accent}'/>`);
+  });
+  return cells.join("");
+}
+
+function barChart(accent: string): string {
+  const heights = [60, 90, 130, 75, 110];
+  const opacities = [0.35, 0.55, 1, 0.45, 0.7];
+  return heights
+    .map((h, i) => {
+      const x = 100 + i * 40;
+      const y = 320 - h;
+      return `<rect x='${x}' y='${y}' width='24' height='${h}' fill='${accent}' opacity='${opacities[i]}'/>`;
+    })
+    .join("");
+}
+
 const SAMPLES = [
+  // 0: landing page wireframe
   placeholder(
-    "#F4E7DD",
-    "<circle cx='150' cy='190' r='110' fill='#E8785A'/><rect x='300' y='60' width='140' height='240' rx='24' fill='#2B2B2B' opacity='0.85'/>",
+    "#EAF2FF",
+    "<rect x='20' y='20' width='440' height='30' rx='8' fill='#FFFFFF'/><circle cx='40' cy='35' r='5' fill='#3B5BDB'/><circle cx='58' cy='35' r='5' fill='#8FA8F0'/><circle cx='76' cy='35' r='5' fill='#C7D3F7'/>" +
+      "<rect x='20' y='66' width='60' height='16' rx='4' fill='#3B5BDB'/><rect x='300' y='70' width='40' height='8' rx='4' fill='#8FA8F0'/><rect x='350' y='70' width='40' height='8' rx='4' fill='#8FA8F0'/><rect x='400' y='70' width='60' height='8' rx='4' fill='#8FA8F0'/>" +
+      "<rect x='20' y='100' width='440' height='150' rx='12' fill='#3B5BDB' opacity='0.15'/>" +
+      "<rect x='20' y='265' width='220' height='20' rx='6' fill='#1c1c1a' opacity='0.85'/><rect x='20' y='295' width='160' height='10' rx='4' fill='#8a8a8a'/><rect x='20' y='320' width='90' height='24' rx='12' fill='#3B5BDB'/>",
   ),
+  // 1: mobile app screen wireframe
   placeholder(
-    "#E4ECF7",
-    "<rect x='40' y='60' width='190' height='240' rx='20' fill='#3B5BDB'/><circle cx='360' cy='150' r='80' fill='#1C1C1A' opacity='0.15'/><rect x='300' y='210' width='150' height='90' rx='16' fill='#3B5BDB' opacity='0.6'/>",
+    "#FDEDE7",
+    "<rect x='150' y='20' width='180' height='320' rx='24' fill='#FFFFFF' stroke='#E8785A' stroke-width='3'/>" +
+      "<rect x='170' y='40' width='140' height='18' rx='6' fill='#E8785A'/><circle cx='300' cy='49' r='7' fill='#F5B5A2'/>" +
+      "<rect x='170' y='75' width='140' height='70' rx='10' fill='#E8785A' opacity='0.18'/><rect x='170' y='150' width='90' height='8' rx='4' fill='#E8785A' opacity='0.5'/><rect x='170' y='163' width='60' height='8' rx='4' fill='#E8785A' opacity='0.3'/>" +
+      "<rect x='170' y='185' width='140' height='70' rx='10' fill='#E8785A' opacity='0.18'/><rect x='170' y='260' width='90' height='8' rx='4' fill='#E8785A' opacity='0.5'/><rect x='170' y='273' width='60' height='8' rx='4' fill='#E8785A' opacity='0.3'/>",
   ),
+  // 2: dashboard wireframe (sidebar + stat cards + bar chart)
   placeholder(
-    "#EAF3E8",
-    "<g fill='#3E8E4F'><circle cx='60' cy='70' r='26'/><circle cx='170' cy='70' r='26'/><circle cx='280' cy='70' r='26'/><circle cx='390' cy='70' r='26'/><circle cx='60' cy='180' r='26'/><circle cx='170' cy='180' r='26'/><circle cx='280' cy='180' r='26'/><circle cx='390' cy='180' r='26'/><circle cx='60' cy='290' r='26'/><circle cx='170' cy='290' r='26'/><circle cx='280' cy='290' r='26'/><circle cx='390' cy='290' r='26'/></g>",
+    "#F1EBFB",
+    "<rect x='20' y='20' width='60' height='320' rx='10' fill='#7C4DFF' opacity='0.15'/><rect x='35' y='40' width='30' height='30' rx='8' fill='#7C4DFF'/><rect x='35' y='85' width='30' height='8' rx='4' fill='#7C4DFF' opacity='0.4'/><rect x='35' y='105' width='30' height='8' rx='4' fill='#7C4DFF' opacity='0.4'/><rect x='35' y='125' width='30' height='8' rx='4' fill='#7C4DFF' opacity='0.4'/>" +
+      "<rect x='100' y='20' width='120' height='60' rx='10' fill='#FFFFFF'/><rect x='115' y='35' width='60' height='10' rx='4' fill='#7C4DFF'/><rect x='115' y='55' width='40' height='16' rx='4' fill='#7C4DFF' opacity='0.3'/>" +
+      "<rect x='235' y='20' width='120' height='60' rx='10' fill='#FFFFFF'/><rect x='250' y='35' width='60' height='10' rx='4' fill='#7C4DFF'/><rect x='250' y='55' width='40' height='16' rx='4' fill='#7C4DFF' opacity='0.3'/>" +
+      "<rect x='370' y='20' width='90' height='60' rx='10' fill='#FFFFFF'/><rect x='385' y='35' width='40' height='10' rx='4' fill='#7C4DFF'/><rect x='385' y='55' width='30' height='16' rx='4' fill='#7C4DFF' opacity='0.3'/>" +
+      barChart("#7C4DFF"),
   ),
-  placeholder("#EDE6F7", "<path d='M0 360L240 0L480 360Z' fill='#7C4DFF' opacity='0.8'/>"),
+  // 3: e-commerce product grid wireframe
   placeholder(
-    "#FBF0DA",
-    "<rect x='60' y='80' width='360' height='70' rx='18' fill='#D8A13A'/><rect x='60' y='170' width='260' height='70' rx='18' fill='#D8A13A' opacity='0.75'/><rect x='60' y='260' width='190' height='40' rx='14' fill='#D8A13A' opacity='0.5'/>",
+    "#EAF6EE",
+    "<rect x='20' y='20' width='440' height='28' rx='14' fill='#FFFFFF'/><circle cx='40' cy='34' r='6' fill='#2FA35C' opacity='0.5'/><rect x='55' y='29' width='150' height='10' rx='5' fill='#2FA35C' opacity='0.25'/>" +
+      "<rect x='20' y='66' width='210' height='120' rx='10' fill='#FFFFFF'/><rect x='32' y='78' width='186' height='75' rx='8' fill='#2FA35C' opacity='0.2'/><rect x='32' y='160' width='80' height='9' rx='4' fill='#1c1c1a' opacity='0.5'/><rect x='32' y='175' width='40' height='9' rx='4' fill='#2FA35C'/>" +
+      "<rect x='250' y='66' width='210' height='120' rx='10' fill='#FFFFFF'/><rect x='262' y='78' width='186' height='75' rx='8' fill='#2FA35C' opacity='0.2'/><rect x='262' y='160' width='80' height='9' rx='4' fill='#1c1c1a' opacity='0.5'/><rect x='262' y='175' width='40' height='9' rx='4' fill='#2FA35C'/>" +
+      "<rect x='20' y='200' width='210' height='120' rx='10' fill='#FFFFFF'/><rect x='32' y='212' width='186' height='75' rx='8' fill='#2FA35C' opacity='0.2'/><rect x='32' y='294' width='80' height='9' rx='4' fill='#1c1c1a' opacity='0.5'/><rect x='32' y='309' width='40' height='9' rx='4' fill='#2FA35C'/>" +
+      "<rect x='250' y='200' width='210' height='120' rx='10' fill='#FFFFFF'/><rect x='262' y='212' width='186' height='75' rx='8' fill='#2FA35C' opacity='0.2'/><rect x='262' y='294' width='80' height='9' rx='4' fill='#1c1c1a' opacity='0.5'/><rect x='262' y='309' width='40' height='9' rx='4' fill='#2FA35C'/>",
   ),
+  // 4: blog/article wireframe
   placeholder(
-    "#FBE4EC",
-    "<circle cx='150' cy='140' r='90' fill='#E24C82'/><circle cx='300' cy='220' r='60' fill='#E24C82' opacity='0.55'/><circle cx='380' cy='110' r='34' fill='#E24C82' opacity='0.3'/>",
+    "#FBF2DC",
+    "<rect x='30' y='30' width='300' height='26' rx='6' fill='#1c1c1a' opacity='0.85'/><rect x='30' y='66' width='140' height='10' rx='4' fill='#C98A1F'/>" +
+      "<rect x='30' y='100' width='260' height='9' rx='4' fill='#8a8a8a'/><rect x='30' y='118' width='260' height='9' rx='4' fill='#8a8a8a'/><rect x='30' y='136' width='180' height='9' rx='4' fill='#8a8a8a'/>" +
+      "<rect x='30' y='165' width='6' height='60' fill='#C98A1F'/><rect x='46' y='170' width='230' height='9' rx='4' fill='#C98A1F' opacity='0.7'/><rect x='46' y='188' width='190' height='9' rx='4' fill='#C98A1F' opacity='0.7'/>" +
+      "<rect x='330' y='30' width='120' height='170' rx='10' fill='#C98A1F' opacity='0.25'/>",
   ),
+  // 5: settings/form wireframe
   placeholder(
-    "#E0F3F1",
-    "<path d='M0 250 Q120 150 240 250 T480 250 V360 H0 Z' fill='#1F9C8F'/><circle cx='390' cy='100' r='46' fill='#1F9C8F' opacity='0.5'/>",
+    "#FCEAF1",
+    "<rect x='40' y='40' width='90' height='9' rx='4' fill='#1c1c1a' opacity='0.6'/><rect x='40' y='58' width='300' height='30' rx='8' fill='#FFFFFF' stroke='#D6437E' stroke-width='2'/>" +
+      "<rect x='40' y='110' width='90' height='9' rx='4' fill='#1c1c1a' opacity='0.6'/><rect x='40' y='128' width='300' height='30' rx='8' fill='#FFFFFF' stroke='#D6437E' stroke-width='2'/>" +
+      "<rect x='40' y='180' width='90' height='9' rx='4' fill='#1c1c1a' opacity='0.6'/><rect x='40' y='198' width='300' height='30' rx='8' fill='#FFFFFF' stroke='#D6437E' stroke-width='2'/>" +
+      "<rect x='40' y='250' width='60' height='26' rx='13' fill='#D6437E' opacity='0.3'/><circle cx='86' cy='263' r='10' fill='#D6437E'/>" +
+      "<rect x='40' y='300' width='110' height='34' rx='17' fill='#D6437E'/>",
   ),
+  // 6: calendar/scheduling wireframe
+  placeholder("#E7F5F2", calendarWireframe("#1F9C8F")),
+  // 7: messaging app wireframe -- the one with real animation (pulsing
+  // "typing…" dots via SVG <animate>), tagged with the #a.gif fragment
+  // wherever it's used below so the widget shows its "GIF" badge.
   placeholder(
     "#2B2B2B",
-    "<rect x='40' y='60' width='400' height='140' rx='16' fill='#525252'/><rect x='40' y='220' width='190' height='80' rx='14' fill='#525252'/><rect x='250' y='220' width='190' height='80' rx='14' fill='#525252'/>",
+    "<rect x='30' y='30' width='220' height='40' rx='16' fill='#454545'/><rect x='46' y='45' width='150' height='10' rx='5' fill='#8a8a8a'/>" +
+      "<rect x='230' y='85' width='220' height='40' rx='16' fill='#4FD1C5' opacity='0.85'/><rect x='246' y='100' width='150' height='10' rx='5' fill='#173330'/>" +
+      "<rect x='30' y='140' width='180' height='40' rx='16' fill='#454545'/><rect x='46' y='155' width='110' height='10' rx='5' fill='#8a8a8a'/>" +
+      "<rect x='30' y='195' width='90' height='40' rx='16' fill='#454545'/>" +
+      "<circle cx='55' cy='215' r='6' fill='#8a8a8a'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0s' repeatCount='indefinite'/></circle>" +
+      "<circle cx='75' cy='215' r='6' fill='#8a8a8a'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0.2s' repeatCount='indefinite'/></circle>" +
+      "<circle cx='95' cy='215' r='6' fill='#8a8a8a'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0.4s' repeatCount='indefinite'/></circle>" +
+      "<rect x='30' y='300' width='380' height='36' rx='18' fill='#3a3a3a'/><circle cx='430' cy='318' r='18' fill='#4FD1C5'/>",
   ),
 ];
 
@@ -120,7 +198,7 @@ export const DEMO_WIDGET_DATA = {
       relationship: "Priya and I collaborated on brand identity for two startups.",
       endorsesOwner: false,
       endorsements: [],
-      workSamples: [workSample("w6", 5), workSample("w7", 6), workSample("w8", 7), workSample("w9", 0)],
+      workSamples: [workSample("w6", 5), workSample("w7", 6), workSample("w8", 2), workSample("w9", 0)],
     },
     {
       id: "leo",
@@ -154,10 +232,10 @@ export const DEMO_WIDGET_DATA = {
       endorsesOwner: true,
       endorsements: [],
       workSamples: [
-        workSample("w16", 6, true),
-        workSample("w17", 1),
-        workSample("w18", 5),
-        workSample("w19", 7),
+        workSample("w16", 7, true),
+        workSample("w17", 0),
+        workSample("w18", 4),
+        workSample("w19", 2),
       ],
     },
   ],
