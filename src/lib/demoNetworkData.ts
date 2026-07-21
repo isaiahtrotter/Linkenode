@@ -3,30 +3,41 @@
 // prop. The signed-out marketing page has no live embed_key or Supabase row
 // to fetch, so this stands in for it.
 
-// Simple wireframe "cards" for work samples -- a few flat shapes (never
-// more than 4) rendered in a single accent color at varying opacity, on a
-// shared neutral canvas. Monochromatic per connection: the accent passed in
-// matches that connection's own PALETTE color from
-// public/network-widget/widget.js's personColor(id) (see ACCENT below), so
-// each person's work samples read as "their" color rather than an unrelated
-// per-sample-type palette. Flat SVGs (data URIs, so no network dependency).
-// One composition (SAMPLE_SHAPES[3], the messaging one) genuinely animates
-// via native SVG <animate> -- a small pulsing "typing…" indicator -- so
-// it's a real (if tiny) moving image, not just a static frame wearing a
-// ".gif" label.
-function placeholder(shapes: string): string {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='480' height='360'><rect width='480' height='360' fill='#F6F1E9'/>${shapes}</svg>`;
-  // base64, not encodeURIComponent -- these SVGs use single-quoted XML
-  // attributes throughout, and encodeURIComponent doesn't escape ' (it's in
-  // JS's "unreserved" set), so the resulting data URI kept its literal
-  // quote characters. Every place this URL ends up (an HTML style
-  // attribute, a CSS url() token) uses a quote character as its own
-  // delimiter, so the URL was getting truncated at the first literal quote
-  // inside it -- rendering nothing, though the element itself still took
-  // up layout space (hence "I can scroll, but nothing shows up").
-  // base64's alphabet (A-Za-z0-9+/=) contains no quote characters at all,
-  // so this is safe in any of those contexts regardless of source quoting.
+// Work-sample wireframes -- the user's own 4 SVGs (Desktop/1.svg,
+// "2 (gif).svg", 3.svg, 4.svg), embedded verbatim below rather than
+// hand-designed, reused across connections (via index mod 4 in workSample
+// below). Each uses the same 3 fixed grayscale tones (#BCBCBC/#686868/
+// #393939); `recolor` swaps those for 3 tints of a connection's own accent
+// color at render time (see ACCENT below), so a person's work samples read
+// as a monochromatic study in "their" color rather than flat grayscale.
+function toDataUri(svg: string): string {
+  // base64, not encodeURIComponent -- a prior version of this file's SVGs
+  // used single-quoted XML attributes, and encodeURIComponent doesn't
+  // escape ' (it's in JS's "unreserved" set), so the resulting data URI
+  // kept its literal quote characters. Every place this URL ends up (an
+  // HTML style attribute, a CSS url() token) uses a quote character as its
+  // own delimiter, so the URL was getting truncated at the first literal
+  // quote inside it -- rendering nothing, though the element itself still
+  // took up layout space. base64's alphabet (A-Za-z0-9+/=) contains no
+  // quote characters at all, so this stays safe regardless of source
+  // quoting or consuming context.
   return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
+
+function mixHex(hexA: string, hexB: string, w: number): string {
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const r = Math.round(((a >> 16) & 255) * w + ((b >> 16) & 255) * (1 - w));
+  const g = Math.round(((a >> 8) & 255) * w + ((b >> 8) & 255) * (1 - w));
+  const bl = Math.round((a & 255) * w + (b & 255) * (1 - w));
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1);
+}
+
+function recolor(svg: string, accent: string): string {
+  return svg
+    .replaceAll("#BCBCBC", mixHex(accent, "#FFFFFF", 0.3))
+    .replaceAll("#686868", mixHex(accent, "#FFFFFF", 0.65))
+    .replaceAll("#393939", mixHex(accent, "#FFFFFF", 1));
 }
 
 // Each connection's accent -- kept in sync with public/network-widget/
@@ -43,37 +54,20 @@ const ACCENT = {
   ivy: "#B7C42E",
 };
 
-// Only 4 compositions total -- reused freely across connections (via index
-// mod 4 in workSample below) rather than needing a unique design per work
-// sample. Each is 2-4 shapes, colored at call time via `accent`.
-const SAMPLE_SHAPES: Array<(accent: string) => string> = [
-  // 0: two overlapping circles + a solid bar
-  (accent) =>
-    `<circle cx='150' cy='130' r='65' fill='${accent}' opacity='0.25'/>` +
-    `<circle cx='245' cy='175' r='90' fill='${accent}' opacity='0.55'/>` +
-    `<rect x='40' y='300' width='400' height='34' rx='17' fill='${accent}'/>`,
-  // 1: three ascending bars
-  (accent) =>
-    `<rect x='140' y='220' width='50' height='100' rx='8' fill='${accent}' opacity='0.4'/>` +
-    `<rect x='215' y='170' width='50' height='150' rx='8' fill='${accent}' opacity='0.7'/>` +
-    `<rect x='290' y='110' width='50' height='210' rx='8' fill='${accent}'/>`,
-  // 2: 2x2 grid
-  (accent) =>
-    `<rect x='140' y='90' width='90' height='90' rx='14' fill='${accent}' opacity='0.3'/>` +
-    `<rect x='250' y='90' width='90' height='90' rx='14' fill='${accent}' opacity='0.55'/>` +
-    `<rect x='140' y='200' width='90' height='90' rx='14' fill='${accent}' opacity='0.55'/>` +
-    `<rect x='250' y='200' width='90' height='90' rx='14' fill='${accent}'/>`,
-  // 3: messaging bubbles -- the one with real animation (pulsing "typing…"
-  // dots via SVG <animate>), tagged with the #a.gif fragment wherever it's
-  // used below so the widget shows its "GIF" badge. Reserved for Ivy only
-  // (see connections below) so the animation is never shown without that
-  // label elsewhere.
-  (accent) =>
-    `<rect x='60' y='70' width='230' height='46' rx='20' fill='${accent}' opacity='0.3'/>` +
-    `<rect x='190' y='150' width='230' height='46' rx='20' fill='${accent}' opacity='0.8'/>` +
-    `<circle cx='80' cy='240' r='7' fill='${accent}'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0s' repeatCount='indefinite'/></circle>` +
-    `<circle cx='102' cy='240' r='7' fill='${accent}'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0.2s' repeatCount='indefinite'/></circle>` +
-    `<circle cx='124' cy='240' r='7' fill='${accent}'><animate attributeName='opacity' values='0.3;1;0.3' dur='1.2s' begin='0.4s' repeatCount='indefinite'/></circle>`,
+const SAMPLE_SVGS = [
+  // Desktop/1.svg
+  `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_327_2)"><rect width="387" height="261" fill="#BCBCBC"/><circle cx="274" cy="88" r="113" fill="#393939"/><rect x="-9" y="158" width="457" height="157" fill="#686868"/></g><defs><clipPath id="clip0_327_2"><rect width="387" height="261" fill="white"/></clipPath></defs></svg>`,
+  // Desktop/3.svg
+  `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="387" height="261" fill="#393939"/><rect x="61" y="45" width="119" height="136" fill="#BCBCBC"/><rect x="204" y="80" width="119" height="136" fill="#BCBCBC"/></svg>`,
+  // Desktop/4.svg
+  `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="387" height="261" fill="#686868"/><rect y="48" width="123" height="166" fill="#BCBCBC"/><rect x="132" y="48" width="123" height="166" fill="#BCBCBC"/><rect x="264" y="48" width="123" height="166" fill="#BCBCBC"/></svg>`,
+  // Desktop/2 (gif).svg -- the one designated to animate. Reserved for Ivy
+  // only (see connections below), tagged with the #a.gif fragment wherever
+  // it's used so the widget shows its "GIF" badge, so the animation is
+  // never shown without that label elsewhere. Subtle opacity pulse on the
+  // circle -- a small, real (if tiny) moving image, not just a static frame
+  // wearing a ".gif" label.
+  `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="387" height="261" fill="#393939"/><rect x="20" y="24" width="74" height="74" fill="#686868"/><circle cx="194" cy="143" r="82" fill="#BCBCBC"><animate attributeName="opacity" values="1;0.55;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>`,
 ];
 
 function workSample(
@@ -82,7 +76,8 @@ function workSample(
   accent: string,
   asGif = false,
 ): { id: string; url: string; sort_order: number } {
-  const url = placeholder(SAMPLE_SHAPES[index % SAMPLE_SHAPES.length](accent)) + (asGif ? "#a.gif" : "");
+  const svg = recolor(SAMPLE_SVGS[index % SAMPLE_SVGS.length], accent);
+  const url = toDataUri(svg) + (asGif ? "#a.gif" : "");
   return { id, url, sort_order: index };
 }
 
