@@ -100,27 +100,34 @@
 }
 
 /* Laptop mockup -- bled off the right edge (clipped by .page's
-   overflow:hidden) to read as a big hero visual, but sized by HEIGHT
-   (capped well under the hero's available height) rather than width, so
-   the whole laptop -- deck included -- always fits vertically instead of
-   being cropped at the bottom. */
+   overflow:hidden) to read as a big hero visual. width is the single
+   sizing driver (aspect-ratio on .laptop derives the height from it, so
+   .laptop's box always matches the rendered image exactly -- no
+   letterboxing slack for .widgetHost's percentage math below to drift
+   against). The width formula takes the smallest of: a vw share, a hard
+   px cap, and a vh-derived cap (converted through the image's own aspect
+   ratio) so it can never grow tall enough to blow past the header or
+   wide enough to collide with the text column -- it just scales smoothly
+   up/down with the viewport in whichever dimension is tighter.
+   76px below is this page's measured header height. */
 
 .laptopStage {
   position: absolute;
   right: -10vw;
-  bottom: 4vh;
-  height: min(600px, 78%);
+  top: 3vh;
+  width: min(58vw, 900px, calc((94vh - 76px) * 1.74785));
 }
 
 .laptop {
   position: relative;
-  height: 100%;
+  width: 100%;
+  aspect-ratio: 1220 / 698;
 }
 
 .laptopImg {
   display: block;
+  width: 100%;
   height: 100%;
-  width: auto;
 }
 
 /* Coordinates measured directly from public/laptop-mockup.png's own pixels
@@ -151,10 +158,11 @@
   height: 380px;
 }
 
-/* Mobile: laptop mockup moves above the heading, fully contained (no bleed),
-   everything stacks in normal flow instead of the desktop's absolute-bleed
-   layout. */
-@media (max-width: 860px) {
+/* Mobile/tablet: laptop mockup moves above the heading, fully contained (no
+   bleed), everything stacks in normal flow instead of the desktop's
+   absolute-bleed layout. Bumped to a tablet-width breakpoint so tablets get
+   this stacked layout too, not just phones. */
+@media (max-width: 1024px) {
   .hero {
     flex-direction: column;
     align-items: stretch;
@@ -171,19 +179,9 @@
 
   .laptopStage {
     position: static;
-    height: auto;
     width: min(420px, 100%);
     margin: 0 auto 12px;
     order: 1;
-  }
-
-  .laptop {
-    height: auto;
-  }
-
-  .laptopImg {
-    height: auto;
-    width: 100%;
   }
 
   .widgetHost :global(.panel-expanded) {
