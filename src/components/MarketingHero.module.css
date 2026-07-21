@@ -100,22 +100,23 @@
 }
 
 /* Laptop mockup -- bled off the right edge (clipped by .page's
-   overflow:hidden) to read as a big hero visual. width is the single
-   sizing driver (aspect-ratio on .laptop derives the height from it, so
-   .laptop's box always matches the rendered image exactly -- no
-   letterboxing slack for .widgetHost's percentage math below to drift
-   against). The width formula takes the smallest of: a vw share, a hard
-   px cap, and a vh-derived cap (converted through the image's own aspect
-   ratio) so it can never grow tall enough to blow past the header or
-   wide enough to collide with the text column -- it just scales smoothly
-   up/down with the viewport in whichever dimension is tighter.
-   76px below is this page's measured header height. */
+   overflow:hidden) to read as a big hero visual, targeting roughly 70vw /
+   80vh. width is the single sizing driver (aspect-ratio on .laptop derives
+   the height from it, so .laptop's box always matches the rendered image
+   exactly -- no letterboxing slack for .widgetHost's percentage math below
+   to drift against). The 80vh term is expressed as an equivalent width (via
+   the image's own aspect ratio) so min() can pick whichever of the two
+   targets is tighter -- e.g. a wide-but-short window falls back to the
+   80vh-equivalent width instead of overshooting past the bottom of the
+   page. Below ~1200px wide there isn't room for 70vw beside the text
+   column without overlapping it -- that's exactly the width the
+   mobile/tablet breakpoint below switches away from this layout at. */
 
 .laptopStage {
   position: absolute;
-  right: -10vw;
+  right: -13vw;
   top: 3vh;
-  width: min(58vw, 900px, calc((94vh - 76px) * 1.74785));
+  width: min(70vw, calc(80vh * 1.74785));
 }
 
 .laptop {
@@ -161,8 +162,10 @@
 /* Mobile/tablet: laptop mockup moves above the heading, fully contained (no
    bleed), everything stacks in normal flow instead of the desktop's
    absolute-bleed layout. Bumped to a tablet-width breakpoint so tablets get
-   this stacked layout too, not just phones. */
-@media (max-width: 1024px) {
+   this stacked layout too, not just phones -- and wide enough that the
+   70vw-sized desktop laptop above never has to appear at a width where it
+   would overlap the text column. */
+@media (max-width: 1200px) {
   .hero {
     flex-direction: column;
     align-items: stretch;
