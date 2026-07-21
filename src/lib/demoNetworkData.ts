@@ -55,10 +55,12 @@ const ACCENT = {
 };
 
 // Fixed filename order (1, 2, 3, 4) -- every connection's Nth work sample
-// uses SAMPLE_SVGS[N-1], always, never a random pick. SAMPLE_SVGS[1] (index
-// 1, "2 (gif).svg") carries its own baked-in <animate> pulse regardless of
-// who uses it; only Ivy's instance is additionally tagged asGif so the
-// widget shows a "GIF" badge on hers specifically (see connections below).
+// uses SAMPLE_SVGS[N-1], always, never a random pick. SAMPLE_SVGS[GIF_INDEX]
+// ("2 (gif).svg") carries its own baked-in <animate> pulse; workSample below
+// tags it with the #a.gif fragment (the widget's "GIF" badge) for whoever
+// ends up using it, not just one hand-picked connection.
+const GIF_INDEX = 1;
+
 const SAMPLE_SVGS = [
   // Desktop/1.svg
   `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_327_2)"><rect width="387" height="261" fill="#BCBCBC"/><circle cx="274" cy="88" r="113" fill="#393939"/><rect x="-9" y="158" width="457" height="157" fill="#686868"/></g><defs><clipPath id="clip0_327_2"><rect width="387" height="261" fill="white"/></clipPath></defs></svg>`,
@@ -72,14 +74,10 @@ const SAMPLE_SVGS = [
   `<svg width="387" height="261" viewBox="0 0 387 261" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="387" height="261" fill="#686868"/><rect y="48" width="123" height="166" fill="#BCBCBC"/><rect x="132" y="48" width="123" height="166" fill="#BCBCBC"/><rect x="264" y="48" width="123" height="166" fill="#BCBCBC"/></svg>`,
 ];
 
-function workSample(
-  id: string,
-  index: number,
-  accent: string,
-  asGif = false,
-): { id: string; url: string; sort_order: number } {
+function workSample(id: string, index: number, accent: string): { id: string; url: string; sort_order: number } {
   const svg = recolor(SAMPLE_SVGS[index % SAMPLE_SVGS.length], accent);
-  const url = toDataUri(svg) + (asGif ? "#a.gif" : "");
+  const isGif = index % SAMPLE_SVGS.length === GIF_INDEX;
+  const url = toDataUri(svg) + (isGif ? "#a.gif" : "");
   return { id, url, sort_order: index };
 }
 
@@ -199,7 +197,7 @@ export const DEMO_WIDGET_DATA = {
       endorsements: [],
       workSamples: [
         workSample("w16", 0, ACCENT.ivy),
-        workSample("w17", 1, ACCENT.ivy, true),
+        workSample("w17", 1, ACCENT.ivy),
         workSample("w18", 2, ACCENT.ivy),
         workSample("w19", 3, ACCENT.ivy),
       ],
