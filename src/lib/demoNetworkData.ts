@@ -11,7 +11,17 @@
 // just a static frame wearing a ".gif" label.
 function placeholder(bg: string, shapes: string): string {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='480' height='360'><rect width='480' height='360' fill='${bg}'/>${shapes}</svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  // base64, not encodeURIComponent -- these SVGs use single-quoted XML
+  // attributes throughout, and encodeURIComponent doesn't escape ' (it's in
+  // JS's "unreserved" set), so the resulting data URI kept its literal
+  // quote characters. Every place this URL ends up (an HTML style
+  // attribute, a CSS url() token) uses a quote character as its own
+  // delimiter, so the URL was getting truncated at the first literal quote
+  // inside it -- rendering nothing, though the element itself still took
+  // up layout space (hence "I can scroll, but nothing shows up").
+  // base64's alphabet (A-Za-z0-9+/=) contains no quote characters at all,
+  // so this is safe in any of those contexts regardless of source quoting.
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 // A few grid-shaped wireframes (calendar, chart bars) are built from repeated

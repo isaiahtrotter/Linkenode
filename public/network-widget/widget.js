@@ -803,7 +803,7 @@
             .style("width", "100%")
             .style("height", "100%")
             .style("border-radius", "50%")
-            .style("background-image", "url(" + avatarUrl("you") + ")")
+            .style("background-image", 'url("' + avatarUrl("you") + '")')
             .style("background-size", "cover")
             .style("background-position", "center");
           enter
@@ -1308,11 +1308,11 @@
               .map(function (sample) {
                 var isGif = /\.gif($|\?)/i.test(sample.url || "");
                 return (
-                  '<div style="' +
+                  "<div style='" +
                   tileStyle +
-                  "background-image:url(" +
+                  'background-image:url("' +
                   sample.url +
-                  ');position:relative;">' +
+                  "\");position:relative;'>" +
                   (isGif
                     ? '<span style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.55);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;letter-spacing:0.03em;">GIF</span>'
                     : "") +
@@ -1355,11 +1355,11 @@
                   '<div style="display:flex;gap:10px;padding:13px 0;border-top:1px solid ' +
                   t.border +
                   ';">' +
-                  '<div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;background-color:' +
+                  "<div style='width:26px;height:26px;border-radius:50%;flex-shrink:0;background-color:" +
                   ecolor +
-                  ";background-image:url(" +
+                  ';background-image:url("' +
                   eAvatar +
-                  ');background-size:cover;background-position:center;"></div>' +
+                  "\");background-size:cover;background-position:center;'></div>" +
                   '<div style="flex:1;min-width:0;">' +
                   '<p class="wm-label" style="margin:2px 0 5px;color:' +
                   t.textPrimary +
@@ -1393,11 +1393,11 @@
 
           panelContent.innerHTML =
             '<div style="position:relative;padding:16px 18px 0;">' +
-            '<div style="width:64px;height:64px;border-radius:50%;background-color:' +
+            "<div style='width:64px;height:64px;border-radius:50%;background-color:" +
             avatar +
-            ";background-image:url(" +
+            ';background-image:url("' +
             avatarImg +
-            ');background-size:cover;background-position:center;"></div>' +
+            "\");background-size:cover;background-position:center;'></div>" +
             '<button id="close-panel" type="button" style="position:absolute;top:16px;right:14px;width:26px;height:26px;min-width:26px;min-height:26px;padding:0;margin:0;line-height:1;box-sizing:border-box;border-radius:50%;background:' +
             t.chip +
             ";color:" +
