@@ -18,17 +18,6 @@ export default async function Page() {
     getSessionUser(),
   ]);
 
-  // "Brand new signup" vs. a returning login -- last_sign_in_at is updated
-  // on every sign-in including the very first one, so the two timestamps
-  // only land within a few seconds of each other the first time. Compared
-  // with a threshold rather than strict equality since they're set by
-  // separate statements in the sign-in flow, not guaranteed byte-identical.
-  const isNewSignup = !!(
-    user?.created_at &&
-    user?.last_sign_in_at &&
-    Math.abs(new Date(user.created_at).getTime() - new Date(user.last_sign_in_at).getTime()) < 5000
-  );
-
   return (
     <DashboardPage
       profile={profile}
@@ -36,7 +25,6 @@ export default async function Page() {
       connections={connections}
       directory={directory}
       email={user?.email ?? null}
-      isNewSignup={isNewSignup}
     />
   );
 }

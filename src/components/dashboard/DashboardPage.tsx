@@ -28,7 +28,6 @@ export default function DashboardPage({
   workSamples,
   connections,
   email,
-  isNewSignup,
 }: {
   profile: Profile;
   workSamples: WorkSample[];
@@ -38,17 +37,26 @@ export default function DashboardPage({
   // kept in the prop list so it's a one-line change to bring back.
   directory?: DirectoryEntry[];
   email: string | null;
-  isNewSignup: boolean;
 }) {
   // Runs on every dashboard load, new signup or returning session alike --
   // identify() is idempotent and cheap, and this is the one place both
   // cases are guaranteed to pass through (unlike the sign-in button, which
   // a returning user with a persisted session never clicks again).
-  // signup_completed only fires the first time, right after identify() so
-  // it lands attached to the person rather than anonymous.
+  // signup_completed only fires once, right after identify() so it lands
+  // attached to the person rather than anonymous -- gated on ?new_signup=1,
+  // set by SignInButton right at the moment of actual sign-in (the freshest
+  // point to tell a brand-new account from a returning one; see its
+  // comment), not re-derived here from a separate, less reliable read.
   useEffect(() => {
     posthog.identify(profile.id, { email, name: profile.name });
-    if (isNewSignup) posthog.capture("signup_completed");
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new_signup") === "1") {
+      posthog.capture("signup_completed");
+      params.delete("new_signup");
+      const query = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per
     // mount only; re-identifying on every unrelated re-render is pointless.
   }, []);

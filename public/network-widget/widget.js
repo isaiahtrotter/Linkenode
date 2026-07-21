@@ -7,7 +7,7 @@
 
         // shadow used to be a boolean (on/off); now it's a 0-100 intensity.
         // Coerce old saved boolean values so existing profiles keep working.
-        var shadowRaw = options.shadow != null ? options.shadow : (settings.shadow != null ? settings.shadow : 60);
+        var shadowRaw = options.shadow != null ? options.shadow : (settings.shadow != null ? settings.shadow : 0);
         var shadowIntensity = typeof shadowRaw === "boolean" ? (shadowRaw ? 60 : 0) : shadowRaw;
 
         var svg = d3.select("#graph-svg");

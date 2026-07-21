@@ -8,7 +8,7 @@ export const BUTTON_LABEL_MAX_LENGTH = 15;
 export const DEFAULT_SETTINGS: WidgetSettings = {
   theme: "light",
   cornerRadius: 24,
-  shadow: 60,
+  shadow: 0,
   label: "View My Network",
 };
 

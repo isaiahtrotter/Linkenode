@@ -76,7 +76,7 @@ export default function SignInButton() {
           // credential, is as early as "signup_started" can fire.
           posthog.capture("signup_started");
 
-          const { error: signInError } = await supabase.auth.signInWithIdToken({
+          const { data, error: signInError } = await supabase.auth.signInWithIdToken({
             provider: "google",
             token: response.credential,
             nonce: rawNonce,
@@ -85,7 +85,24 @@ export default function SignInButton() {
             setError(signInError.message);
             return;
           }
-          window.location.href = "/dashboard";
+
+          // Supabase's ID-token sign-in has no first-class "this was a
+          // signup" signal -- it implicitly creates the user on first sight,
+          // same as OAuth. created_at landing within a few seconds of
+          // last_sign_in_at is the standard way to infer "this is that
+          // user's very first sign-in." Read right here, off this call's own
+          // response -- last_sign_in_at is typed optional in Supabase's SDK
+          // and isn't reliably present on a *later*, separate getUser() call
+          // (e.g. from the dashboard after it's navigated to), which is why
+          // this used to be computed there instead and silently never fired.
+          const user = data.user;
+          const isNewSignup = !!(
+            user?.created_at &&
+            user?.last_sign_in_at &&
+            Math.abs(new Date(user.created_at).getTime() - new Date(user.last_sign_in_at).getTime()) < 5000
+          );
+
+          window.location.href = isNewSignup ? "/dashboard?new_signup=1" : "/dashboard";
         },
       });
 
