@@ -15,6 +15,21 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px clamp(20px, 4vw, 48px);
+  animation: navFadeIn 0.7s ease both;
+}
+
+@keyframes navFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
 }
 
 /* Stacked mobile/tablet layout (see MarketingHero.module.css) is taller
@@ -25,5 +40,14 @@
     height: auto;
     min-height: 100vh;
     overflow: visible;
+  }
+
+  /* 25% smaller than the height={22} passed to WordmarkLogo -- overriding
+     via CSS (which wins over the SVG's own width/height attributes) rather
+     than a separate mobile prop, width:auto preserves the logo's aspect
+     ratio off the new height. */
+  .logoWrap svg {
+    height: 16.5px;
+    width: auto;
   }
 }

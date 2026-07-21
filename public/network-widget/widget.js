@@ -1669,8 +1669,25 @@
             startY = clientY;
           var startW = panelExpandedEl.offsetWidth,
             startH = panelExpandedEl.offsetHeight;
-          var maxW = Math.min(720, window.innerWidth - 40);
-          var maxH = Math.min(820, window.innerHeight - 40);
+          // A position:fixed element's offsetParent is null unless a
+          // transformed ancestor exists (per spec), in which case it's that
+          // ancestor -- i.e. exactly the case where something has confined
+          // this widget to a smaller box than the real browser window (see
+          // MarketingHero.module.css's .widgetHost). Bound the resize to
+          // that box instead of window.innerWidth/innerHeight so dragging
+          // the handle can't grow the panel past the container it's
+          // actually confined to. Plain embeds have no such ancestor, so
+          // this falls through to the original window-based bounds.
+          var confiningEl = widgetRoot.offsetParent;
+          var maxW, maxH;
+          if (confiningEl) {
+            var confiningRect = confiningEl.getBoundingClientRect();
+            maxW = Math.min(720, confiningRect.width - 40);
+            maxH = Math.min(820, confiningRect.height - 40);
+          } else {
+            maxW = Math.min(720, window.innerWidth - 40);
+            maxH = Math.min(820, window.innerHeight - 40);
+          }
 
           function move(cx, cy) {
             var dx = cx - startX,

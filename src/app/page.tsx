@@ -18,7 +18,9 @@ export default async function Home() {
   return (
     <div className={styles.page}>
       <header className={styles.navbar}>
-        <WordmarkLogo height={22} />
+        <div className={styles.logoWrap}>
+          <WordmarkLogo height={22} />
+        </div>
         <SignInButton />
       </header>
 

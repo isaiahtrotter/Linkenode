@@ -84,7 +84,7 @@ export default function SignInButton() {
         type: "standard",
         theme: "outline",
         size: "large",
-        text: "continue_with",
+        text: "signin",
         shape: "pill",
       });
     });
