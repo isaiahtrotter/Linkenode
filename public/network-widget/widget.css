@@ -173,27 +173,47 @@ body { margin:0; font-family: -apple-system, sans-serif; }
       }
 
       @media (max-width: 480px) {
+        /* Centered modal: 16px of breathing room on each side, 70% of the
+           viewport tall, vertically centered (so 15vh of gap above and
+           below, since 100vh - 70vh split evenly is 15vh each).
+           #widget-root itself always carries transform:translateY(0) once
+           ready (its own fade-up reveal) -- a translate of 0 is still a
+           non-none transform, so #widget-root is always the containing
+           block for its position:fixed children, and that containing block
+           is a zero-size point sitting 24px inset from whichever true
+           corner it's anchored to (each corner-*'s own bottom/top/left/
+           right:24px). That's never mattered for width/height before
+           (always fixed pixel values, which don't care about their
+           containing block's size), but matters here: vw/vh units resolve
+           against the true viewport regardless (so width/height below are
+           safe as-is), while the left/right/top/bottom offsets below are
+           each shifted by -24px to land 16px (or 15vh) from the *true*
+           edge instead of 16px (15vh) from a point that's already 24px
+           inset from it. */
         .panel-expanded {
-          height: calc(100vh - 32px);
-          border-radius: 16px 16px 0 0;
+          position: fixed;
+          width: calc(100vw - 32px);
+          height: 70vh;
+          border-radius: var(--wt-radius, 24px);
         }
         #widget-root.corner-bottom-right .panel-expanded,
+        #widget-root.corner-top-right .panel-expanded {
+          left: auto;
+          right: -8px;
+        }
         #widget-root.corner-bottom-left .panel-expanded,
-        #widget-root.corner-top-right .panel-expanded,
         #widget-root.corner-top-left .panel-expanded {
-          position: fixed;
-          left: 0;
-          right: 0;
-          width: 100vw;
+          left: -8px;
+          right: auto;
         }
         #widget-root.corner-bottom-right .panel-expanded,
         #widget-root.corner-bottom-left .panel-expanded {
-          bottom: 16px;
+          bottom: calc(15vh - 24px);
           top: auto;
         }
         #widget-root.corner-top-right .panel-expanded,
         #widget-root.corner-top-left .panel-expanded {
-          top: 16px;
+          top: calc(15vh - 24px);
           bottom: auto;
         }
         #resize-handle {
