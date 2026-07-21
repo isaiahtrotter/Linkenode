@@ -16,3 +16,14 @@
   justify-content: space-between;
   padding: 18px clamp(20px, 4vw, 48px);
 }
+
+/* Stacked mobile layout (see MarketingHero.module.css) is taller than one
+   screen, so the desktop's 100vh/overflow:hidden crop has to give way to
+   normal scrolling. */
+@media (max-width: 860px) {
+  .page {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}

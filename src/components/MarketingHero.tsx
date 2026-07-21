@@ -7,7 +7,7 @@ import styles from "./MarketingHero.module.css";
 
 function EyeIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
@@ -16,19 +16,22 @@ function EyeIcon() {
 
 function UsersIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="8" cy="8" r="4" />
+      <path d="M8 14c-4.4 0-8 2.2-8 5v2h13v-2c0-1.8 1-3.4 2.5-4.4C13.9 14.4 11.2 14 8 14Z" />
+      <circle cx="17.5" cy="9.5" r="3.2" opacity="0.7" />
+      <path
+        d="M17.5 14.9c-.86 0-1.7.1-2.5.29 1.55 1.1 2.5 2.68 2.5 4.51V21h6.5v-1.5c0-2.68-3.13-4.6-6.5-4.6Z"
+        opacity="0.7"
+      />
     </svg>
   );
 }
 
 function ZapIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" />
     </svg>
   );
 }
@@ -109,13 +112,15 @@ export default function MarketingHero() {
                 <div className={styles.navLinks}>
                   <div className={styles.navPill} />
                   <div className={styles.navPill} />
+                  <div className={styles.navPill} />
                 </div>
               </div>
+              <div className={styles.titlePill} />
               <div className={styles.heroBlock} />
               <div className={styles.gridRow}>
-                <div className={styles.gridCircle} />
-                <div className={styles.gridCircle} />
-                <div className={styles.gridRect} />
+                <div className={styles.blobShape} />
+                <div className={styles.circleShape} />
+                <div className={styles.rectShape} />
               </div>
 
               <div className={styles.widgetHost}>
